@@ -36,6 +36,12 @@ in one step.
 /plugin install jira-claude-plugin
 ```
 
+Type each line exactly as shown, in one go. If you instead run `/plugin`
+with no arguments and use the interactive menu, its "Enter marketplace
+source" field wants just `Chang-Jin-Lee/jira-claude-plugin` — don't type
+`marketplace add` again in there, or Claude Code will treat the whole
+string as the repo path and reject it.
+
 The first time you use it, Claude Code will ask for your Jira site URL,
 your account email, and the API token you created above. These are stored
 securely on your machine — never in this repo, never in plain text.
