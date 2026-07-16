@@ -1,0 +1,6 @@
+# Generated per-project output — holds the user's own Jira data
+jira-docs/
+
+# OS junk
+.DS_Store
+Thumbs.db
