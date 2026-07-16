@@ -4,3 +4,6 @@ jira-docs/
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Subagent-driven-development scratch state (not part of the plugin)
+.superpowers/
