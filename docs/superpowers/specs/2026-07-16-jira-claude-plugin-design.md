@@ -47,12 +47,15 @@ optional handoff into superpowers.
   `mcp-atlassian` server, with its `env` sourced from
   `${user_config.jira_url}` / `${user_config.jira_email}` /
   `${user_config.jira_api_token}`.
-- **Two entry points, one behavior**: a slash command
-  (`/jira-to-backlog [board]`) for explicit invocation, and a Skill
-  (`skills/jira-to-backlog/SKILL.md`) with a description that lets natural
-  language ("이 지라 보드 문서화해줘") trigger the same flow. The command is a
-  thin pointer at the same instructions the skill contains — no duplicated
-  logic to keep in sync.
+- **One skill, two invocation paths**: a single Skill
+  (`skills/jira-to-backlog/SKILL.md`) is both auto-triggered by natural
+  language ("이 지라 보드 문서화해줘", via its `description`) and directly
+  invocable as `/jira-claude-plugin:jira-to-backlog [board]` using
+  `$ARGUMENTS` for the board name. A separate `commands/` file was
+  considered but dropped — in Claude Code's plugin model, a
+  `skills/<name>/SKILL.md` already provides both invocation paths, so a
+  second file would either duplicate the same logic or collide on the same
+  namespaced name.
 - **Distribution**: `.claude-plugin/marketplace.json` at the repo root lists
   this one plugin with `source: "./"`, so the same repo is both the plugin
   and its own marketplace — install via:
@@ -119,9 +122,7 @@ jira-claude-plugin/
 ├── .mcp.json                 # bundles mcp-atlassian, env from ${user_config.*}
 ├── skills/
 │   └── jira-to-backlog/
-│       └── SKILL.md          # the workflow above
-├── commands/
-│   └── jira-to-backlog.md    # slash command, points at the same workflow
+│       └── SKILL.md          # the workflow above; both /jira-claude-plugin:jira-to-backlog and natural language
 ├── README.md                  # product-facing: what/why/how to use
 ├── LICENSE                    # MIT
 └── .gitignore
