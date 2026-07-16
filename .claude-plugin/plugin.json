@@ -1,0 +1,33 @@
+{
+  "name": "jira-claude-plugin",
+  "description": "Crawl a Jira Kanban board into a document and backlog, then optionally hand off to superpowers to start the work.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Chang-Jin-Lee"
+  },
+  "homepage": "https://github.com/Chang-Jin-Lee/jira-claude-plugin",
+  "repository": "https://github.com/Chang-Jin-Lee/jira-claude-plugin",
+  "license": "MIT",
+  "keywords": ["jira", "kanban", "backlog", "atlassian", "superpowers"],
+  "userConfig": {
+    "jira_url": {
+      "type": "string",
+      "title": "Jira site URL",
+      "description": "Your Jira Cloud site, e.g. https://your-domain.atlassian.net",
+      "required": true
+    },
+    "jira_email": {
+      "type": "string",
+      "title": "Jira account email",
+      "description": "Atlassian account email used for API authentication",
+      "required": true
+    },
+    "jira_api_token": {
+      "type": "string",
+      "title": "Jira API token",
+      "description": "Create one at https://id.atlassian.com/manage-profile/security/api-tokens",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}
