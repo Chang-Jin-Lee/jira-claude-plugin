@@ -12,8 +12,12 @@
 
 - This plan produces throwaway/diagnostic artifacts only. It does not touch
   `skills/jira-to-backlog/SKILL.md`, `.mcp.json`, or any existing file from
-  the already-shipped plugin (repo: `C:\ChangJinGithub\jira_claude_plugin`,
-  currently at commit `5805303` on `master`).
+  the already-shipped plugin (repo: `Chang-Jin-Lee/jira-claude-plugin`,
+  currently at commit `07fe6b0` on `master`).
+- All commands below are written relative to the repo root and assume the
+  current directory is wherever this repo was cloned on the machine doing
+  the implementation (path may differ from the original development
+  machine).
 - Platform for this spike: Windows (the machine this plugin is being
   developed and tested on). The diagnostic must check the Windows console
   device (`CON`), not assume POSIX `/dev/tty`.
@@ -100,7 +104,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Verify the script runs standalone first**
 
-Run: `uv run "C:\ChangJinGithub\jira_claude_plugin\scripts\diag_tty.py"`
+Run (from the repo root): `uv run scripts/diag_tty.py`
 Expected: prints one line of JSON to stdout, e.g.
 `{"hookSpecificOutput": {"additionalContext": "[jira-claude-plugin TTY diagnostic] stdin.isatty=True stdout.isatty=True stderr.isatty=True CON_open_ok=True CON_open_error=None"}}`
 (values will differ depending on how this exact command was run — that's
@@ -131,7 +135,7 @@ Create `hooks/hooks.json`:
 
 - [ ] **Step 4: Validate the plugin**
 
-Run: `claude plugin validate "C:\ChangJinGithub\jira_claude_plugin"`
+Run (from the repo root): `claude plugin validate .`
 Expected: passes (no errors; it's fine if it doesn't specifically validate
 hook matcher semantics — that's confirmed by the live trigger in Step 6,
 not by static validation).
@@ -139,7 +143,6 @@ not by static validation).
 - [ ] **Step 5: Commit**
 
 ```bash
-cd "C:/ChangJinGithub/jira_claude_plugin"
 git add scripts/diag_tty.py hooks/hooks.json
 git commit -m "Add TTY passthrough diagnostic spike (hook + script)"
 ```
