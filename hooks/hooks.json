@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "UserPromptExpansion": [
+      {
+        "matcher": "jira-claude-plugin:jira-to-backlog",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv",
+            "args": ["run", "${CLAUDE_PLUGIN_ROOT}/scripts/diag_tty.py"]
+          }
+        ]
+      }
+    ]
+  }
+}
