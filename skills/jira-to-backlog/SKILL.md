@@ -10,6 +10,7 @@ Confirm Jira MCP tools are available (tools exposed by the `atlassian` MCP
 server this plugin bundles, typically named like `jira_search` /
 `jira_get_issue`). If none are visible:
 
+- Never call Jira tools that write, transition, or create issues (this skill is read-only) — even if offered by the connected MCP server.
 - Tell the user Jira isn't reachable yet.
 - Ask them to run `/plugin` and fill in (or re-check) this plugin's
   `jira_url` / `jira_email` / `jira_api_token` configuration, and confirm
