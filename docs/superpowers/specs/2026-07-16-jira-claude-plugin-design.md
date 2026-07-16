@@ -61,7 +61,7 @@ optional handoff into superpowers.
   and its own marketplace — install via:
   ```
   /plugin marketplace add Chang-Jin-Lee/jira-claude-plugin
-  /plugin install jira-to-backlog
+  /plugin install jira-claude-plugin
   ```
 
 ## Workflow (skill/command instructions)

@@ -6,11 +6,13 @@ description: Crawl a Jira Kanban board into one consolidated document and a back
 
 ## 0. Prerequisites check
 
+This skill is strictly read-only: never call any Jira tool that writes,
+transitions, or creates issues, even if the connected MCP server offers one.
+
 Confirm Jira MCP tools are available (tools exposed by the `atlassian` MCP
 server this plugin bundles, typically named like `jira_search` /
 `jira_get_issue`). If none are visible:
 
-- Never call Jira tools that write, transition, or create issues (this skill is read-only) — even if offered by the connected MCP server.
 - Tell the user Jira isn't reachable yet.
 - Ask them to run `/plugin` and fill in (or re-check) this plugin's
   `jira_url` / `jira_email` / `jira_api_token` configuration, and confirm
@@ -52,10 +54,6 @@ visited-set of issue keys so no issue is fetched or processed twice — an
 issue reachable both directly from the board and as someone else's child
 should still appear only once in the final tree, under its actual parent.
 Stop recursing once an issue key has already been visited.
-
-This mirrors the same recursive, deduplicated crawl that the companion
-`Export-JiraTree.ps1` project already does directly against the Jira REST
-API — same idea, done here through MCP tool calls instead.
 
 For each issue, record: key, title/summary, full description, issue type,
 status, assignee, priority, and its Jira URL (`<jira_url>/browse/<KEY>`).
