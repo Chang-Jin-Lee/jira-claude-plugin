@@ -81,6 +81,19 @@ Once those are ready, Claude will ask whether you'd like to start working
 through the backlog with [superpowers](https://github.com/obra/superpowers)
 — offering to install it first if you don't already have it.
 
+## Troubleshooting
+
+**"Failed to connect" on the atlassian MCP server right after installing `uv`.**
+`uv`'s installer updates your PATH, but any terminal window (or terminal app)
+that was already open won't see the change — including one where you just
+ran `/plugin install`. Reopening a tab in the same terminal app usually
+isn't enough either, since many terminal apps keep one long-running host
+process behind the scenes. Fully quit the terminal application (all its
+windows) and open a brand new one — or just restart your computer once —
+then launch Claude Code again. This is only needed the one time right after
+installing `uv`; every launch after that picks up the right PATH
+automatically.
+
 ## License
 
 MIT
