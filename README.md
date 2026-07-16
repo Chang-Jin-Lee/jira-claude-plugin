@@ -62,6 +62,12 @@ Or invoke it directly:
 If you don't name a board, Claude will list the boards you have access to
 and let you pick one.
 
+## Example
+
+Ask in natural language, pick a board, and it takes it from there:
+
+![Example terminal session: asking to document a Jira board, picking the KAN board from a list, the crawl running, the two output files being written, and Claude asking whether to continue into superpowers](assets/example-terminal.svg)
+
 ## What you get
 
 Two files, saved into your current project:
