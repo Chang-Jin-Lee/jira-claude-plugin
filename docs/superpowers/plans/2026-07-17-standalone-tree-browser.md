@@ -22,8 +22,13 @@
   (home-relative, NOT under the plugin's versioned install directory, so
   it survives plugin updates).
 - `SessionStart` hook uses no `matcher` (fires on every session).
-- `.claude-plugin/plugin.json` must keep its existing
-  `"hooks": "./hooks/hooks.json"` field — hooks do not auto-discover.
+- `hooks/hooks.json` at the plugin root IS auto-discovered — do NOT add an
+  explicit `"hooks": "./hooks/hooks.json"` field to `.claude-plugin/plugin.json`.
+  (Correction to a belief carried over from the TTY spike: live testing
+  during Task 2 proved the explicit field causes a "Duplicate hooks file
+  detected" load error, since the standard path is already loaded
+  automatically. `manifest.hooks` is only for *additional* hook files
+  beyond the standard one.)
 - Every task that changes `hooks/hooks.json`, `plugin.json`, or any file
   a hook depends on must bump the `"version"` field in both
   `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` —
