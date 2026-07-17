@@ -65,7 +65,12 @@ def _search(creds: dict, jql: str) -> list[dict]:
         for issue in page:
             issues.append({"key": issue["key"], "name": issue["fields"]["summary"]})
         next_page_token = data.get("nextPageToken")
-        if not next_page_token or data.get("isLast"):
+        # Per Atlassian's documented pagination algorithm for this endpoint,
+        # absence of nextPageToken is the sole, authoritative stop signal.
+        # `isLast` is informational only: some responses report isLast=true
+        # while still including a usable nextPageToken, and stopping on
+        # isLast in that case would silently drop remaining issues.
+        if not next_page_token:
             break
     return issues
 

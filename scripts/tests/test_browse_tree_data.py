@@ -97,6 +97,37 @@ def test_list_board_issues_paginates_across_multiple_pages(requests_mock):
     assert requests_mock.request_history[1].qs["nextpagetoken"] == ["tok1"]
 
 
+def test_list_board_issues_follows_next_page_token_even_when_is_last_true(requests_mock):
+    # Regression test: Atlassian's /rest/api/3/search/jql endpoint can return
+    # a response with nextPageToken present AND isLast: true in the same
+    # page (a documented disagreement between the two signals). The stop
+    # condition must depend solely on nextPageToken absence/presence, so the
+    # loop must still follow the token and fetch the next page rather than
+    # stopping early and silently dropping remaining issues.
+    requests_mock.get(
+        "https://x.atlassian.net/rest/api/3/search/jql",
+        [
+            {
+                "json": {
+                    "issues": [{"key": "KAN-1", "fields": {"summary": "First"}}],
+                    "nextPageToken": "tok1",
+                    "isLast": True,
+                }
+            },
+            {
+                "json": {
+                    "issues": [{"key": "KAN-2", "fields": {"summary": "Second"}}],
+                    "isLast": True,
+                }
+            },
+        ],
+    )
+    issues = bt.list_board_issues(CREDS, "KAN")
+    assert issues == [{"key": "KAN-1", "name": "First"}, {"key": "KAN-2", "name": "Second"}]
+    assert len(requests_mock.request_history) == 2
+    assert requests_mock.request_history[1].qs["nextpagetoken"] == ["tok1"]
+
+
 def test_copy_to_clipboard_invokes_clip(monkeypatch):
     calls = []
 
