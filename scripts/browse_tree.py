@@ -77,3 +77,90 @@ def list_issue_children(creds: dict, issue_key: str) -> list[dict]:
 
 def copy_to_clipboard(text: str) -> None:
     subprocess.run(["clip"], input=text.encode("utf-8"), check=True)
+
+
+from textual.app import App
+from textual.widgets import Static, Tree
+
+
+class BrowseApp(App):
+    def __init__(
+        self,
+        credentials: dict,
+        boards_fn=list_boards,
+        board_issues_fn=list_board_issues,
+        issue_children_fn=list_issue_children,
+        copy_fn=copy_to_clipboard,
+    ):
+        super().__init__()
+        self.credentials = credentials
+        self.boards_fn = boards_fn
+        self.board_issues_fn = board_issues_fn
+        self.issue_children_fn = issue_children_fn
+        self.copy_fn = copy_fn
+
+    def compose(self):
+        yield Tree("Jira boards")
+        yield Static(id="status")
+
+    def on_mount(self) -> None:
+        tree = self.query_one(Tree)
+        tree.root.expand()
+        for board in self.boards_fn(self.credentials):
+            tree.root.add(
+                f"{board['key']} — {board['name']}",
+                data={"key": board["key"], "kind": "board", "loaded": False},
+            )
+
+    def on_tree_node_expanded(self, event: Tree.NodeExpanded) -> None:
+        node = event.node
+        data = node.data
+        if data is None or data.get("loaded"):
+            return
+        status = self.query_one("#status", Static)
+        try:
+            if data["kind"] == "board":
+                children = self.board_issues_fn(self.credentials, data["key"])
+            else:
+                children = self.issue_children_fn(self.credentials, data["key"])
+        except requests.RequestException as exc:
+            status.update(f"[red]{data['key']} 조회 실패: {exc} - 다시 펼쳐서 재시도하세요[/red]")
+            return
+        data["loaded"] = True
+        status.update("")
+        if not children:
+            node.allow_expand = False
+            return
+        for child in children:
+            node.add(
+                f"{child['key']} — {child['name']}",
+                data={"key": child["key"], "kind": "issue", "loaded": False},
+            )
+
+    def on_tree_node_selected(self, event: Tree.NodeSelected) -> None:
+        data = event.node.data
+        if data is None:
+            return
+        self.copy_fn(data["key"])
+        self.exit(result=data["key"])
+
+
+def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8")
+    creds = load_credentials(credentials_path())
+    if creds is None:
+        print(
+            "자격증명 파일이 없습니다 - 이 플러그인이 활성화된 Claude Code "
+            "세션을 한 번 시작한 뒤 다시 실행하세요."
+        )
+        return 1
+    app = BrowseApp(creds)
+    result = app.run()
+    if result:
+        print(f"{result} 을(를) 클립보드에 복사했습니다 - Claude Code로 돌아가 붙여넣으세요.")
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
