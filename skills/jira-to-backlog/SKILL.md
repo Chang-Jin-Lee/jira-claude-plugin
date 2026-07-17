@@ -113,7 +113,7 @@ tell the user where they were saved, then:
   `/plugin install superpowers`). If yes, walk them through it, then ask
   the question below. If no, stop here.
 - If `superpowers` skills are available, ask whether to continue straight
-  into brainstorming/writing-plans using `jira-docs/<BOARD-KEY>-backlog.md`
+  into brainstorming/writing-plans using `jira-docs/<ROOT-KEY>-backlog.md`
   as the input, or stop here so they can review the files first.
 
 Only invoke a superpowers skill after the user explicitly says yes to that
