@@ -1,7 +1,7 @@
 {
   "name": "jira-claude-plugin",
   "description": "Crawl a Jira Kanban board into a document and backlog, then optionally hand off to superpowers to start the work.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": {
     "name": "Chang-Jin-Lee"
   },
@@ -9,7 +9,6 @@
   "repository": "https://github.com/Chang-Jin-Lee/jira-claude-plugin",
   "license": "MIT",
   "keywords": ["jira", "kanban", "backlog", "atlassian", "superpowers"],
-  "hooks": "./hooks/hooks.json",
   "userConfig": {
     "jira_url": {
       "type": "string",
