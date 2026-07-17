@@ -19,11 +19,19 @@ server this plugin bundles, typically named like `jira_search` /
   `uv`/`uvx` is installed on their machine (`uvx --version`).
 - Stop here until it's fixed.
 
-## 1. Resolve the board
+## 1. Resolve the board or issue
 
-If `$ARGUMENTS` (or the user's message) names a board/project, try to
-resolve it directly — exact key or name match first. If nothing was given,
-or nothing matches:
+If `$ARGUMENTS` (or the user's message) matches an issue-key pattern —
+a project prefix followed by a dash and a number, e.g. `KAN-248` — treat
+it as a single issue, not a board: fetch it directly with `jira_get_issue`
+and use it as the crawl root for step 3 onward, **skipping step 2's
+board-wide fetch entirely**. The written document/backlog filenames use
+this issue key instead of a board key (e.g. `jira-docs/KAN-248.md`,
+`jira-docs/KAN-248-backlog.md`).
+
+Otherwise, if `$ARGUMENTS` (or the user's message) names a board/project,
+try to resolve it directly — exact key or name match first. If nothing
+was given, or nothing matches:
 
 - Use the available Jira tools to list the boards/projects the
   authenticated user can see (for example, a JQL project search, or a
@@ -60,7 +68,7 @@ status, assignee, priority, and its Jira URL (`<jira_url>/browse/<KEY>`).
 
 ## 4. Write the consolidated document
 
-Save one Markdown file to `jira-docs/<BOARD-KEY>.md` in the user's current
+Save one Markdown file to `jira-docs/<ROOT-KEY>.md` in the user's current
 project directory (create `jira-docs/` if it doesn't exist yet; overwrite
 the file if it already exists — no versioning). Structure:
 
@@ -76,7 +84,7 @@ read-heavy crawl against a rate-limited API and large boards take a while.
 
 ## 5. Generate the backlog
 
-From the tree just captured, write `jira-docs/<BOARD-KEY>-backlog.md`: a
+From the tree just captured, write `jira-docs/<ROOT-KEY>-backlog.md`: a
 flat, ordered list of backlog items (ordered by the board's own issue
 order, or by created-date ascending if that's not available). For each
 item include:
