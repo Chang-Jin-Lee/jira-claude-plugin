@@ -38,6 +38,11 @@
   no feature branch/worktree).
 - Verification tool available: `claude plugin validate <path>`.
 - All commands below are written relative to the repo root.
+- Any script that prints Korean text to stdout must call
+  `sys.stdout.reconfigure(encoding="utf-8")` as the first statement of
+  `main()` — confirmed live on Windows that Python's default stdout
+  encoding (the system codepage) mangles Korean text into mojibake
+  otherwise. Confirmed safe under pytest's `capsys` fixture.
 
 ---
 
@@ -794,6 +799,7 @@ class BrowseApp(App):
 
 
 def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8")
     creds = load_credentials(credentials_path())
     if creds is None:
         print(
