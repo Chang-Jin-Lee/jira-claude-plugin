@@ -40,6 +40,7 @@ def browse_command_hint(plugin_root: str) -> str:
 
 
 def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8")
     creds = build_credentials(dict(os.environ))
     if creds is None:
         print(
