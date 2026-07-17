@@ -9,6 +9,7 @@
   "repository": "https://github.com/Chang-Jin-Lee/jira-claude-plugin",
   "license": "MIT",
   "keywords": ["jira", "kanban", "backlog", "atlassian", "superpowers"],
+  "hooks": "./hooks/hooks.json",
   "userConfig": {
     "jira_url": {
       "type": "string",

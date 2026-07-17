@@ -7,7 +7,27 @@
           {
             "type": "command",
             "command": "uv",
-            "args": ["run", "${CLAUDE_PLUGIN_ROOT}/scripts/diag_tty.py"]
+            "args": ["run", "${CLAUDE_PLUGIN_ROOT}/scripts/diag_tty.py", "plugin-colon-skill"]
+          }
+        ]
+      },
+      {
+        "matcher": "jira-to-backlog",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv",
+            "args": ["run", "${CLAUDE_PLUGIN_ROOT}/scripts/diag_tty.py", "bare-skill-name"]
+          }
+        ]
+      },
+      {
+        "matcher": "/jira-claude-plugin:jira-to-backlog",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv",
+            "args": ["run", "${CLAUDE_PLUGIN_ROOT}/scripts/diag_tty.py", "slash-plugin-colon-skill"]
           }
         ]
       }
