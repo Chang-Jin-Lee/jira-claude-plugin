@@ -136,6 +136,31 @@ keys through the hook, this design needs to fall back to a different
 launch mechanism (research escalates to the human at that point — this is
 a go/no-go gate, not a detail to route around silently).
 
+**Spike result (2026-07-17, Windows, Claude Code 2.1.211):** Ran per
+`docs/superpowers/plans/2026-07-16-tty-passthrough-spike.md`. After
+several rounds of debugging live-trigger failures (see that plan's
+progress ledger for the full history — plugin hooks require an explicit
+`"hooks"` field in `plugin.json`, don't auto-discover like `.mcp.json`/
+`SKILL.md`; `UserPromptExpansion` expects plain stdout text, not
+`UserPromptSubmit`'s `hookSpecificOutput.additionalContext` JSON; and
+`/plugin update` is a no-op unless `plugin.json`'s `version` field
+actually changes), the hook fired successfully with matcher
+`"jira-claude-plugin:jira-to-backlog"` (the bare `plugin:skill` form, no
+leading slash — the other two candidate forms tested,
+`"jira-to-backlog"` and `"/jira-claude-plugin:jira-to-backlog"`, were
+registered alongside it but did not fire). Observed diagnostic output:
+`stdin.isatty=False stdout.isatty=False stderr.isatty=False
+CON_open_ok=False CON_open_error=File or stream is not seekable.`
+
+**Verdict: go/no-go gate FAILS.** Neither inherited stdio nor a direct
+`CON` open works in this hook's process. Per the outcomes enumerated in
+the spike plan, this is the hard-failure case: the `UserPromptExpansion`
++ subprocess approach cannot deliver a real arrow-key TUI on this
+platform. This design's launch mechanism (Section on invocation flow,
+steps above) needs to change to a standalone command the user runs
+directly themselves outside the hook system, rather than a hook-launched
+TUI — before any further implementation work on the tree browser itself.
+
 ## Edge cases
 
 - **Board/issue has zero children when expanded**: render as a leaf (no
