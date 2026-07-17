@@ -7,3 +7,11 @@ Thumbs.db
 
 # Subagent-driven-development scratch state (not part of the plugin)
 .superpowers/
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# Claude Code scheduler runner artifacts (harness state, not plugin content)
+.claude-scheduled/
+claude-scheduled.log
