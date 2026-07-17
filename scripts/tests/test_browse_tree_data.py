@@ -59,30 +59,42 @@ def test_list_boards_paginates_across_multiple_pages(requests_mock):
 
 def test_list_board_issues_returns_key_and_summary(requests_mock):
     requests_mock.get(
-        "https://x.atlassian.net/rest/api/2/search",
-        json={"issues": [{"key": "KAN-1", "fields": {"summary": "First"}}], "total": 1},
+        "https://x.atlassian.net/rest/api/3/search/jql",
+        json={"issues": [{"key": "KAN-1", "fields": {"summary": "First"}}], "isLast": True},
     )
     assert bt.list_board_issues(CREDS, "KAN") == [{"key": "KAN-1", "name": "First"}]
 
 
 def test_list_issue_children_returns_key_and_summary(requests_mock):
     requests_mock.get(
-        "https://x.atlassian.net/rest/api/2/search",
-        json={"issues": [{"key": "KAN-2", "fields": {"summary": "Child"}}], "total": 1},
+        "https://x.atlassian.net/rest/api/3/search/jql",
+        json={"issues": [{"key": "KAN-2", "fields": {"summary": "Child"}}], "isLast": True},
     )
     assert bt.list_issue_children(CREDS, "KAN-1") == [{"key": "KAN-2", "name": "Child"}]
 
 
 def test_list_board_issues_paginates_across_multiple_pages(requests_mock):
     requests_mock.get(
-        "https://x.atlassian.net/rest/api/2/search",
+        "https://x.atlassian.net/rest/api/3/search/jql",
         [
-            {"json": {"issues": [{"key": "KAN-1", "fields": {"summary": "First"}}], "total": 2}},
-            {"json": {"issues": [{"key": "KAN-2", "fields": {"summary": "Second"}}], "total": 2}},
+            {
+                "json": {
+                    "issues": [{"key": "KAN-1", "fields": {"summary": "First"}}],
+                    "nextPageToken": "tok1",
+                    "isLast": False,
+                }
+            },
+            {
+                "json": {
+                    "issues": [{"key": "KAN-2", "fields": {"summary": "Second"}}],
+                    "isLast": True,
+                }
+            },
         ],
     )
     issues = bt.list_board_issues(CREDS, "KAN")
     assert issues == [{"key": "KAN-1", "name": "First"}, {"key": "KAN-2", "name": "Second"}]
+    assert requests_mock.request_history[1].qs["nextpagetoken"] == ["tok1"]
 
 
 def test_copy_to_clipboard_invokes_clip(monkeypatch):

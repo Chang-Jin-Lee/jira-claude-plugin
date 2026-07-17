@@ -48,12 +48,15 @@ def list_boards(creds: dict) -> list[dict]:
 
 def _search(creds: dict, jql: str) -> list[dict]:
     issues = []
-    start_at = 0
+    next_page_token = None
     while True:
+        params = {"jql": jql, "maxResults": 100, "fields": "summary"}
+        if next_page_token:
+            params["nextPageToken"] = next_page_token
         resp = requests.get(
-            f"{creds['jira_url']}/rest/api/2/search",
+            f"{creds['jira_url']}/rest/api/3/search/jql",
             auth=_auth(creds),
-            params={"jql": jql, "startAt": start_at, "maxResults": 100},
+            params=params,
             timeout=30,
         )
         resp.raise_for_status()
@@ -61,8 +64,8 @@ def _search(creds: dict, jql: str) -> list[dict]:
         page = data.get("issues", [])
         for issue in page:
             issues.append({"key": issue["key"], "name": issue["fields"]["summary"]})
-        start_at += len(page)
-        if not page or start_at >= data.get("total", start_at):
+        next_page_token = data.get("nextPageToken")
+        if not next_page_token or data.get("isLast"):
             break
     return issues
 
