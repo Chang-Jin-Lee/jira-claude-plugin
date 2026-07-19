@@ -1,14 +1,8 @@
 {
   "mcpServers": {
     "atlassian": {
-      "command": "uvx",
-      "args": ["mcp-atlassian"],
-      "env": {
-        "JIRA_URL": "${user_config.jira_url}",
-        "JIRA_USERNAME": "${user_config.jira_email}",
-        "JIRA_API_TOKEN": "${user_config.jira_api_token}",
-        "READ_ONLY_MODE": "true"
-      }
+      "command": "uv",
+      "args": ["run", "${CLAUDE_PLUGIN_ROOT}/scripts/run_mcp.py"]
     }
   }
 }

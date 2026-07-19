@@ -231,3 +231,29 @@ calls mediated by model turns. This exception is confined to
   box, no multi-select).
 - Reusing this REST client anywhere else in the plugin.
 - Packaging the browser as an installable CLI independent of the plugin.
+
+## Implementation verification
+
+Verified live on 2026-07-19 against the installed 0.1.6 cache with real
+Jira credentials, driving the actual `BrowseApp` via Textual's Pilot
+(headless driver — same app code, bindings, REST calls, and clipboard
+path a user hits from their terminal):
+
+- Boards loaded on mount (1 board: `KAN — KAN board`).
+- Right-arrow on the board node lazily fetched and expanded its issues
+  (242 issues via the v3 `/search/jql` endpoint — pagination confirmed
+  live). Left-arrow collapsed it. (Arrow-key bindings were added in
+  0.1.6 after live testing found Textual's `Tree` only binds Space.)
+- Enter on an issue exited the app returning `KAN-258`, and the real
+  Windows clipboard contained `KAN-258` (verified via `Get-Clipboard`).
+- Pasting the key into the skill: `SKILL.md`'s issue-key detection
+  correctly routed `KAN-258` to the single-issue path (board fetch
+  skipped). The crawl itself was blocked by a Claude Code bug —
+  `${user_config.*}` in a plugin `.mcp.json` `env` block is never
+  interpolated (anthropics/claude-code#51573), so the bundled
+  mcp-atlassian server had no credentials. Fixed in 0.1.7 by launching
+  the server through `scripts/run_mcp.py`, which injects credentials
+  from the hook-synced `~/.jira-claude-plugin/credentials.json`;
+  verified live via a direct MCP stdio handshake + `jira_get_issue`
+  call returning real KAN-258 data. Full in-session skill crawl still
+  pending one plugin update + session restart.
