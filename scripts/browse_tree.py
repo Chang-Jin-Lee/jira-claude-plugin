@@ -91,6 +91,25 @@ from textual.app import App
 from textual.widgets import Static, Tree
 
 
+class BrowseTree(Tree):
+    """Tree with arrow-key expand/collapse (Textual's Tree only binds Space)."""
+
+    BINDINGS = [
+        ("right", "expand_cursor", "펼치기"),
+        ("left", "collapse_cursor", "접기"),
+    ]
+
+    def action_expand_cursor(self) -> None:
+        node = self.cursor_node
+        if node is not None and node.allow_expand:
+            node.expand()
+
+    def action_collapse_cursor(self) -> None:
+        node = self.cursor_node
+        if node is not None and node.is_expanded:
+            node.collapse()
+
+
 class BrowseApp(App):
     def __init__(
         self,
@@ -108,7 +127,7 @@ class BrowseApp(App):
         self.copy_fn = copy_fn
 
     def compose(self):
-        yield Tree("Jira boards")
+        yield BrowseTree("Jira boards")
         yield Static(id="status")
 
     def on_mount(self) -> None:

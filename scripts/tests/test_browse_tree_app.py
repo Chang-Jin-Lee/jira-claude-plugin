@@ -111,6 +111,51 @@ async def test_selecting_node_copies_key_and_exits():
 
 
 @pytest.mark.asyncio
+async def test_right_arrow_expands_cursor_node():
+    calls = []
+
+    def fake_boards(creds):
+        return [{"key": "KAN", "name": "KAN board"}]
+
+    def fake_board_issues(creds, key):
+        calls.append(key)
+        return [{"key": "KAN-1", "name": "First"}]
+
+    app = bt.BrowseApp(CREDS, boards_fn=fake_boards, board_issues_fn=fake_board_issues)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        tree = app.query_one(Tree)
+        await pilot.press("down")
+        await pilot.press("right")
+        await pilot.pause()
+        board_node = tree.root.children[0]
+        assert board_node.is_expanded
+        assert calls == ["KAN"]
+
+
+@pytest.mark.asyncio
+async def test_left_arrow_collapses_cursor_node():
+    def fake_boards(creds):
+        return [{"key": "KAN", "name": "KAN board"}]
+
+    def fake_board_issues(creds, key):
+        return [{"key": "KAN-1", "name": "First"}]
+
+    app = bt.BrowseApp(CREDS, boards_fn=fake_boards, board_issues_fn=fake_board_issues)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        tree = app.query_one(Tree)
+        await pilot.press("down")
+        await pilot.press("right")
+        await pilot.pause()
+        board_node = tree.root.children[0]
+        assert board_node.is_expanded
+        await pilot.press("left")
+        await pilot.pause()
+        assert board_node.is_expanded is False
+
+
+@pytest.mark.asyncio
 async def test_expand_failure_shows_status_and_allows_retry():
     from textual.widgets import Static
 
