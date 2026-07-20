@@ -146,6 +146,14 @@ synced by a hook that runs once per Claude Code session start. Start (or
 restart) a Claude Code session in this plugin's install with Jira configured
 via `/plugin`, then run the browser again.
 
+## Contributing
+
+Bug reports, doc fixes, and small PRs are genuinely welcome — this started
+as a one-person itch-scratch and gets better the more real Jira setups it's
+tried against. See [CONTRIBUTING.md](CONTRIBUTING.md) for the project
+layout, how to run the tests, and a few real gotchas (version bumps, hook
+wiring, credential handling) worth knowing before you dive in.
+
 ## License
 
 MIT
