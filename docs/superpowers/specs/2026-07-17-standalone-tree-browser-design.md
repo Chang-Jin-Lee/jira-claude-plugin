@@ -257,3 +257,19 @@ path a user hits from their terminal):
   verified live via a direct MCP stdio handshake + `jira_get_issue`
   call returning real KAN-258 data. Full in-session skill crawl still
   pending one plugin update + session restart.
+- Task 6 Step 5 CLOSED on 2026-07-20: after `/plugin update
+  jira-claude-plugin` to 0.1.7 and a genuine fresh session (`claude
+  --new`), ran `/jira-claude-plugin:jira-to-backlog KAN-258` for real.
+  The skill's issue-key detection routed straight to the single-issue
+  path with no board listing/prompt, `jira_get_issue(KAN-258)` returned
+  real data over the now-fixed MCP wrapper, and `jira-docs/KAN-258.md`
+  + `jira-docs/KAN-258-backlog.md` were written correctly (KAN-258 has
+  no children and no description, so the doc/backlog reflect that
+  single leaf issue). This closes the `${user_config.*}` MCP-env bug's
+  verification loop end-to-end.
+- Still untested: literal arrow-key rendering in an actual attached
+  terminal running `browse_tree.py` directly (this session drove the
+  app headlessly via Pilot and via the plugin's MCP tools, not a human
+  at a real keyboard). Prior live Pilot runs already exercised the same
+  binding code paths, so this is a low-risk residual gap, not a new
+  finding.
