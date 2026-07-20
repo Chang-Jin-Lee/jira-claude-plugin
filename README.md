@@ -5,8 +5,25 @@ Turn a Jira Kanban board into a ready-to-work backlog, right from your terminal 
 [![License: MIT](https://img.shields.io/github/license/Chang-Jin-Lee/jira-claude-plugin)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Chang-Jin-Lee/jira-claude-plugin?style=social)](https://github.com/Chang-Jin-Lee/jira-claude-plugin)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-5A67D8)](https://claude.com/claude-code)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![GitHub issues](https://img.shields.io/github/issues/Chang-Jin-Lee/jira-claude-plugin)](https://github.com/Chang-Jin-Lee/jira-claude-plugin/issues)
 
 ![Standalone tree browser: expanding a board with the right arrow, drilling into an issue's subtasks, and highlighting one to copy its key](assets/browse-tree-demo.gif)
+
+## Table of contents
+
+- [What it does](#what-it-does)
+- [Why](#why)
+- [Requirements](#requirements)
+  - [Get a Jira API token](#get-a-jira-api-token)
+- [Install](#install)
+- [Browse boards and issues in a real terminal tree](#browse-boards-and-issues-in-a-real-terminal-tree)
+- [Usage](#usage)
+- [Example](#example)
+- [What you get](#what-you-get)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## What it does
 
