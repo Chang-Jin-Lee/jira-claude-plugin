@@ -1,6 +1,12 @@
 # Jira → Backlog for Claude Code
 
-Turn a Jira Kanban board into a ready-to-work backlog, right from your terminal.
+Turn a Jira Kanban board into a ready-to-work backlog, right from your terminal — plus a real arrow-key tree browser for picking boards and issues without ever leaving your shell.
+
+[![License: MIT](https://img.shields.io/github/license/Chang-Jin-Lee/jira-claude-plugin)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/Chang-Jin-Lee/jira-claude-plugin?style=social)](https://github.com/Chang-Jin-Lee/jira-claude-plugin)
+[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-5A67D8)](https://claude.com/claude-code)
+
+![Standalone tree browser: expanding a board with the right arrow, drilling into an issue's subtasks, and highlighting one to copy its key](assets/browse-tree-demo.gif)
 
 ## What it does
 
@@ -11,18 +17,24 @@ Point this at a Jira board and it will:
 3. Turn that document into a prioritized backlog, with acceptance criteria for each item
 4. Ask whether you want to jump straight into building it, using the [superpowers](https://github.com/obra/superpowers) skill pack
 
+It also ships a **standalone terminal tree browser** — a real, arrow-key-navigable
+view of your boards and issues — for the times you'd rather browse and pick
+than type a board key from memory.
+
 ## Why
 
 Reading through a whole board's epics, stories, and subtasks just to write a
 spec is repetitive busywork. This plugin does the reading for you, so you
 can go from "here's our board" to "here's what to build, and in what order"
-in one step.
+in one step. And since you rarely remember every board key off the top of
+your head, the tree browser lets you find the right one visually instead of
+guessing.
 
 ## Requirements
 
 - [Claude Code](https://claude.com/claude-code)
 - A Jira Cloud site, with your account email and an API token
-- [uv](https://docs.astral.sh/uv/) installed on your machine (used to run the Jira connector)
+- [uv](https://docs.astral.sh/uv/) installed on your machine (used to run the Jira connector and the tree browser)
 
 ### Get a Jira API token
 
@@ -46,6 +58,29 @@ The first time you use it, Claude Code will ask for your Jira site URL,
 your account email, and the API token you created above. These are stored
 securely on your machine — never in this repo, never in plain text.
 
+## Browse boards and issues in a real terminal tree
+
+Every session prints a one-line hint like this:
+
+```
+보드/이슈를 화살표키로 탐색하려면 새 터미널에서 다음을 실행하세요:
+uv run --with textual,requests "<plugin path>/scripts/browse_tree.py"
+```
+
+Run it in any plain terminal (outside Claude Code) and you get a live tree:
+boards at the top, lazily expanding into their issues and subtasks as you
+navigate — no upfront full-board fetch, so it stays snappy even on large
+boards.
+
+- `→` expands the node under the cursor (fetches its children on first expand)
+- `←` collapses it back up
+- `Enter` copies the selected key to your clipboard and exits
+
+Paste that key straight into `/jira-claude-plugin:jira-to-backlog` back in
+Claude Code, and it skips straight to crawling that one issue.
+
+![Static screenshot of the tree fully expanded, with an issue's subtask highlighted and ready to copy](assets/browse-tree-demo.png)
+
 ## Usage
 
 Just ask, in your own words:
@@ -60,13 +95,25 @@ Or invoke it directly:
 ```
 
 If you don't name a board, Claude will list the boards you have access to
-and let you pick one.
+and let you pick one — or paste in a key from the tree browser above.
 
 ## Example
 
-Ask in natural language, pick a board, and it takes it from there:
+```
+> /jira-claude-plugin:jira-to-backlog KAN
 
-![Example terminal session: asking to document a Jira board, picking the KAN board from a list, the crawl running, the two output files being written, and Claude asking whether to continue into superpowers](assets/example-terminal.svg)
+⏺ jira-claude-plugin:jira-to-backlog
+  Checking Jira connection... ✓ connected
+
+  Reading KAN-101 ... KAN-114 ... KAN-115 ... (42 top-level issues)
+  Crawling subtasks ... 118 issues total, visited-set deduped
+
+  ✓ Wrote jira-docs/KAN.md          (118 issues, epic → story → subtask)
+  ✓ Wrote jira-docs/KAN-backlog.md  (94 open items, 24 Done skipped)
+
+  superpowers isn't installed yet — install it now and start
+  brainstorming from this backlog? (y/n)
+```
 
 ## What you get
 
@@ -93,6 +140,11 @@ windows) and open a brand new one — or just restart your computer once —
 then launch Claude Code again. This is only needed the one time right after
 installing `uv`; every launch after that picks up the right PATH
 automatically.
+
+**Tree browser prints "자격증명 파일이 없습니다".** Its credentials file is
+synced by a hook that runs once per Claude Code session start. Start (or
+restart) a Claude Code session in this plugin's install with Jira configured
+via `/plugin`, then run the browser again.
 
 ## License
 
