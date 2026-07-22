@@ -3,7 +3,6 @@
 their own shell (never by Claude Code or a hook) so it gets a real
 attached terminal for arrow-key input.
 """
-import json
 import subprocess
 import sys
 from pathlib import Path

@@ -17,6 +17,8 @@ Turn a Jira Kanban board into a ready-to-work backlog, right from your terminal 
 - [Requirements](#requirements)
   - [Get a Jira API token](#get-a-jira-api-token)
 - [Install](#install)
+  - [Claude Code](#claude-code)
+  - [Codex CLI](#codex-cli)
 - [Browse boards and issues in a real terminal tree](#browse-boards-and-issues-in-a-real-terminal-tree)
 - [Usage](#usage)
 - [Example](#example)
@@ -113,7 +115,11 @@ boards.
 - `Enter` copies the selected key to your clipboard and exits
 
 Paste that key straight into `/jira-claude-plugin:jira-to-backlog` back in
-Claude Code, and it skips straight to crawling that one issue.
+Claude Code, and it skips straight to crawling that one issue. On Codex CLI
+(or any shell where the session hint above never printed), run the exact
+same `uv run --with textual,requests scripts/browse_tree.py` command
+yourself after exporting `JIRA_URL` / `JIRA_USERNAME` / `JIRA_API_TOKEN` —
+see Install above.
 
 ![Static screenshot of the tree fully expanded, with an issue's subtask highlighted and ready to copy](assets/browse-tree-demo.png)
 
@@ -177,10 +183,12 @@ then launch Claude Code again. This is only needed the one time right after
 installing `uv`; every launch after that picks up the right PATH
 automatically.
 
-**Tree browser prints "자격증명 파일이 없습니다".** Its credentials file is
-synced by a hook that runs once per Claude Code session start. Start (or
-restart) a Claude Code session in this plugin's install with Jira configured
-via `/plugin`, then run the browser again.
+**Tree browser prints "자격증명을 찾을 수 없습니다".** In Claude Code, its
+credentials file is synced by a hook that runs once per session start —
+start (or restart) a Claude Code session in this plugin's install with Jira
+configured via `/plugin`, then run the browser again. Running it from Codex
+CLI or a plain shell instead? Make sure `JIRA_URL` / `JIRA_USERNAME` /
+`JIRA_API_TOKEN` are exported in that shell, then run the browser again.
 
 ## Contributing
 
