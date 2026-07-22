@@ -11,13 +11,7 @@ from pathlib import Path
 import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sync_credentials import credentials_path  # noqa: E402
-
-
-def load_credentials(path: Path) -> dict | None:
-    if not path.exists():
-        return None
-    return json.loads(path.read_text(encoding="utf-8"))
+from sync_credentials import credentials_path, load_credentials  # noqa: E402
 
 
 def _auth(creds: dict) -> tuple[str, str]:
@@ -177,8 +171,10 @@ def main() -> int:
     creds = load_credentials(credentials_path())
     if creds is None:
         print(
-            "자격증명 파일이 없습니다 - 이 플러그인이 활성화된 Claude Code "
-            "세션을 한 번 시작한 뒤 다시 실행하세요."
+            "자격증명을 찾을 수 없습니다 - Claude Code에서는 이 플러그인이 "
+            "활성화된 세션을 한 번 시작하고, 다른 도구에서는 JIRA_URL / "
+            "JIRA_USERNAME / JIRA_API_TOKEN 환경변수를 설정한 뒤 다시 "
+            "실행하세요."
         )
         return 1
     app = BrowseApp(creds)

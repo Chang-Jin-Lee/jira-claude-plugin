@@ -31,6 +31,21 @@ def write_credentials(creds: dict, path: Path) -> None:
     path.write_text(json.dumps(creds), encoding="utf-8")
 
 
+def load_credentials(path: Path) -> dict | None:
+    if path.exists():
+        creds = json.loads(path.read_text(encoding="utf-8"))
+        if all(creds.get(key) for key in ("jira_url", "jira_email", "jira_api_token")):
+            return creds
+    env_creds = {
+        "jira_url": os.environ.get("JIRA_URL", ""),
+        "jira_email": os.environ.get("JIRA_USERNAME", ""),
+        "jira_api_token": os.environ.get("JIRA_API_TOKEN", ""),
+    }
+    if not all(env_creds.values()):
+        return None
+    return env_creds
+
+
 def browse_command_hint(plugin_root: str) -> str:
     script = f"{plugin_root}/scripts/browse_tree.py"
     return (

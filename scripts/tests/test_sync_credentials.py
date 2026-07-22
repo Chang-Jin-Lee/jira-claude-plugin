@@ -61,3 +61,46 @@ def test_main_skips_write_when_incomplete(monkeypatch, tmp_path, capsys):
     exit_code = sc.main()
     assert exit_code == 0
     assert not (tmp_path / "credentials.json").exists()
+
+
+def test_load_credentials_reads_file_when_present(tmp_path):
+    creds = {"jira_url": "https://x.atlassian.net", "jira_email": "a@b.com", "jira_api_token": "t"}
+    path = tmp_path / "credentials.json"
+    path.write_text(json.dumps(creds), encoding="utf-8")
+    assert sc.load_credentials(path) == creds
+
+
+def test_load_credentials_falls_back_to_env_when_file_missing(monkeypatch, tmp_path):
+    monkeypatch.setenv("JIRA_URL", "https://x.atlassian.net")
+    monkeypatch.setenv("JIRA_USERNAME", "a@b.com")
+    monkeypatch.setenv("JIRA_API_TOKEN", "t")
+    result = sc.load_credentials(tmp_path / "nope.json")
+    assert result == {
+        "jira_url": "https://x.atlassian.net",
+        "jira_email": "a@b.com",
+        "jira_api_token": "t",
+    }
+
+
+def test_load_credentials_returns_none_when_file_missing_and_env_incomplete(monkeypatch, tmp_path):
+    monkeypatch.delenv("JIRA_URL", raising=False)
+    monkeypatch.delenv("JIRA_USERNAME", raising=False)
+    monkeypatch.delenv("JIRA_API_TOKEN", raising=False)
+    assert sc.load_credentials(tmp_path / "nope.json") is None
+
+
+def test_load_credentials_falls_back_to_env_when_file_incomplete(monkeypatch, tmp_path):
+    path = tmp_path / "credentials.json"
+    path.write_text(
+        json.dumps({"jira_url": "", "jira_email": "", "jira_api_token": ""}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("JIRA_URL", "https://x.atlassian.net")
+    monkeypatch.setenv("JIRA_USERNAME", "a@b.com")
+    monkeypatch.setenv("JIRA_API_TOKEN", "t")
+    result = sc.load_credentials(path)
+    assert result == {
+        "jira_url": "https://x.atlassian.net",
+        "jira_email": "a@b.com",
+        "jira_api_token": "t",
+    }

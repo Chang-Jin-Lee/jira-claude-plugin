@@ -6,7 +6,10 @@ import browse_tree as bt
 CREDS = {"jira_url": "https://x.atlassian.net", "jira_email": "a@b.com", "jira_api_token": "t"}
 
 
-def test_load_credentials_returns_none_when_missing(tmp_path):
+def test_load_credentials_returns_none_when_missing(monkeypatch, tmp_path):
+    monkeypatch.delenv("JIRA_URL", raising=False)
+    monkeypatch.delenv("JIRA_USERNAME", raising=False)
+    monkeypatch.delenv("JIRA_API_TOKEN", raising=False)
     assert bt.load_credentials(tmp_path / "nope.json") is None
 
 
