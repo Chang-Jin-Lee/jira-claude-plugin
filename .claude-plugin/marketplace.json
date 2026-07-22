@@ -8,7 +8,7 @@
     {
       "name": "jira-claude-plugin",
       "description": "Crawl a Jira Kanban board into a document and backlog, then optionally hand off to superpowers to start the work.",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "source": "./",
       "author": {
         "name": "Chang-Jin-Lee"

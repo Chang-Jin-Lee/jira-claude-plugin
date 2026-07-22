@@ -1,0 +1,37 @@
+{
+  "name": "jira-claude-plugin",
+  "version": "0.1.8",
+  "description": "Crawl a Jira Kanban board into a document and backlog, then optionally hand off to superpowers to start the work.",
+  "author": {
+    "name": "Chang-Jin-Lee"
+  },
+  "homepage": "https://github.com/Chang-Jin-Lee/jira-claude-plugin",
+  "repository": "https://github.com/Chang-Jin-Lee/jira-claude-plugin",
+  "license": "MIT",
+  "keywords": ["jira", "kanban", "backlog", "atlassian", "superpowers"],
+  "skills": "./skills/",
+  "mcpServers": {
+    "atlassian": {
+      "command": "uvx",
+      "args": ["mcp-atlassian"],
+      "env": {
+        "JIRA_URL": "${JIRA_URL}",
+        "JIRA_USERNAME": "${JIRA_USERNAME}",
+        "JIRA_API_TOKEN": "${JIRA_API_TOKEN}",
+        "READ_ONLY_MODE": "true"
+      }
+    }
+  },
+  "interface": {
+    "displayName": "Jira → Backlog",
+    "shortDescription": "Crawl a Jira board into a doc and backlog, then hand off to superpowers.",
+    "longDescription": "Crawl a Jira Kanban board into a document and backlog, then optionally hand off to superpowers to start the work.",
+    "developerName": "Chang-Jin-Lee",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": [
+      "Turn our Jira board APP into a backlog.",
+      "Document this Jira board and summarize it."
+    ]
+  }
+}
