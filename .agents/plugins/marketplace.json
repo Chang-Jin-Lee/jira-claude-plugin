@@ -1,0 +1,20 @@
+{
+  "name": "jira-claude-plugin",
+  "interface": {
+    "displayName": "Jira Claude Plugin"
+  },
+  "plugins": [
+    {
+      "name": "jira-claude-plugin",
+      "source": {
+        "source": "url",
+        "url": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
