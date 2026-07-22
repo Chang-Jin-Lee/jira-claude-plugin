@@ -14,9 +14,12 @@ server this plugin bundles, typically named like `jira_search` /
 `jira_get_issue`). If none are visible:
 
 - Tell the user Jira isn't reachable yet.
-- Ask them to run `/plugin` and fill in (or re-check) this plugin's
-  `jira_url` / `jira_email` / `jira_api_token` configuration, and confirm
-  `uv`/`uvx` is installed on their machine (`uvx --version`).
+- Ask them to (re-)configure this plugin's Jira access for whichever tool
+  they're running it from — see this plugin's README for the exact steps
+  (Claude Code: `/plugin` and its `jira_url` / `jira_email` /
+  `jira_api_token` fields; other tools: the `JIRA_URL` / `JIRA_USERNAME` /
+  `JIRA_API_TOKEN` environment variables) — and confirm `uv`/`uvx` is
+  installed on their machine (`uvx --version`).
 - Stop here until it's fixed.
 
 ## 1. Resolve the board or issue
@@ -108,10 +111,13 @@ Do not continue into superpowers on your own. After writing both files,
 tell the user where they were saved, then:
 
 - If no `superpowers` skills are available in this session, ask whether
-  they'd like to install that plugin now
-  (`/plugin marketplace add obra/superpowers-marketplace` then
-  `/plugin install superpowers`). If yes, walk them through it, then ask
-  the question below. If no, stop here.
+  they'd like to install that plugin now, using whichever command matches
+  the tool this skill is running in (Claude Code: `/plugin marketplace add
+  obra/superpowers-marketplace` then `/plugin install superpowers`; Codex
+  CLI: `codex plugin marketplace add obra/superpowers-marketplace` then
+  `codex plugin add superpowers@...`, using the marketplace name printed
+  by that add command). If yes, walk them through it, then ask the
+  question below. If no, stop here.
 - If `superpowers` skills are available, ask whether to continue straight
   into brainstorming/writing-plans using `jira-docs/<ROOT-KEY>-backlog.md`
   as the input, or stop here so they can review the files first.
