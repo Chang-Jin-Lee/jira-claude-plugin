@@ -28,7 +28,8 @@ don't hesitate to open an issue or PR even for something small.
 - `scripts/run_mcp.py` — wrapper that launches the bundled Jira MCP server
   with credentials injected (works around a Claude Code env-interpolation bug)
 - `scripts/tests/` — the test suite (pytest + pytest-asyncio)
-- `hooks/hooks.json`, `.mcp.json`, `.claude-plugin/plugin.json` — plugin wiring
+- `hooks/hooks.json`, `.mcp.json`, `.claude-plugin/plugin.json` — Claude Code plugin wiring
+- `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json` — Codex CLI plugin wiring (no hook; the `atlassian` MCP server reads `JIRA_URL`/`JIRA_USERNAME`/`JIRA_API_TOKEN` from the environment directly)
 - `docs/superpowers/` — design docs and implementation plans for past
   features, written with the [superpowers](https://github.com/obra/superpowers)
   skill pack; useful background reading, not required to contribute
@@ -62,6 +63,9 @@ diving in:
   file a hook depends on, bump `"version"` in both `.claude-plugin/plugin.json`
   and `.claude-plugin/marketplace.json` (they must match). Otherwise
   `/plugin update` silently no-ops — installed users never see the fix.
+  Keep `.codex-plugin/plugin.json`'s `"version"` in lockstep with those
+  two as well, even though Codex has no equivalent update-skip failure
+  mode — it's simpler to keep one version number across every manifest.
 - **Don't add an explicit `"hooks"` field to `plugin.json`.**
   `hooks/hooks.json` at the plugin root auto-discovers; adding the field
   explicitly causes a "duplicate hooks file detected" load error.

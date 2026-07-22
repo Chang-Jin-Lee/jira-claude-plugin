@@ -1,4 +1,4 @@
-# Jira → Backlog for Claude Code
+# Jira → Backlog for Claude Code & Codex CLI
 
 Turn a Jira Kanban board into a ready-to-work backlog, right from your terminal — plus a real arrow-key tree browser for picking boards and issues without ever leaving your shell.
 
@@ -49,7 +49,7 @@ guessing.
 
 ## Requirements
 
-- [Claude Code](https://claude.com/claude-code)
+- [Claude Code](https://claude.com/claude-code) or [Codex CLI](https://developers.openai.com/codex)
 - A Jira Cloud site, with your account email and an API token
 - [uv](https://docs.astral.sh/uv/) installed on your machine (used to run the Jira connector and the tree browser)
 
@@ -59,6 +59,8 @@ guessing.
 2. Create a token and copy it — it's only shown once
 
 ## Install
+
+### Claude Code
 
 ```
 /plugin marketplace add Chang-Jin-Lee/jira-claude-plugin
@@ -74,6 +76,23 @@ string as the repo path and reject it.
 The first time you use it, Claude Code will ask for your Jira site URL,
 your account email, and the API token you created above. These are stored
 securely on your machine — never in this repo, never in plain text.
+
+### Codex CLI
+
+```
+codex plugin marketplace add Chang-Jin-Lee/jira-claude-plugin
+codex plugin add jira-claude-plugin@jira-claude-plugin
+```
+
+Codex plugins don't have an interactive secret-entry screen yet, so set
+these three environment variables yourself before first use (e.g. in
+`~/.zshrc` or `~/.bashrc`), then start a new Codex session:
+
+```
+export JIRA_URL="https://your-domain.atlassian.net"
+export JIRA_USERNAME="you@example.com"
+export JIRA_API_TOKEN="<the token you created above>"
+```
 
 ## Browse boards and issues in a real terminal tree
 
