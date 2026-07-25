@@ -1,6 +1,10 @@
 import json
 
+import pytest
+
 import sync_credentials as sc
+
+CREDS = {"jira_url": "https://x.atlassian.net", "jira_email": "a@b.com", "jira_api_token": "t"}
 
 
 def test_build_credentials_returns_dict_when_all_present():
@@ -33,10 +37,67 @@ def test_write_credentials_writes_json_to_path(tmp_path):
     assert json.loads(target.read_text(encoding="utf-8")) == creds
 
 
+def test_read_credentials_returns_none_when_missing(tmp_path):
+    assert sc.read_credentials(tmp_path / "nope.json") is None
+
+
+def test_read_credentials_returns_none_for_truncated_file(tmp_path):
+    # The exact state that crashed the MCP wrapper: the file exists but a
+    # concurrent write has not put any content in it yet.
+    path = tmp_path / "credentials.json"
+    path.write_text("", encoding="utf-8")
+    assert sc.read_credentials(path) is None
+
+
+def test_read_credentials_returns_none_for_partial_json(tmp_path):
+    path = tmp_path / "credentials.json"
+    path.write_text('{"jira_url": "https://x.atlas', encoding="utf-8")
+    assert sc.read_credentials(path) is None
+
+
+def test_read_credentials_returns_none_when_a_field_is_blank(tmp_path):
+    path = tmp_path / "credentials.json"
+    path.write_text(json.dumps({**CREDS, "jira_api_token": ""}), encoding="utf-8")
+    assert sc.read_credentials(path) is None
+
+
+def test_read_credentials_returns_creds_when_complete(tmp_path):
+    path = tmp_path / "credentials.json"
+    path.write_text(json.dumps(CREDS), encoding="utf-8")
+    assert sc.read_credentials(path) == CREDS
+
+
+def test_write_credentials_skips_rewrite_when_unchanged(tmp_path):
+    path = tmp_path / "credentials.json"
+    assert sc.write_credentials(CREDS, path) is True
+    before = path.stat().st_mtime_ns
+    assert sc.write_credentials(CREDS, path) is False
+    assert path.stat().st_mtime_ns == before
+
+
+def test_write_credentials_leaves_previous_file_intact_when_publish_fails(tmp_path, monkeypatch):
+    # Proves the target is never truncated-then-filled: a failure mid-write
+    # must leave a reader seeing the old, complete credentials.
+    path = tmp_path / "credentials.json"
+    sc.write_credentials(CREDS, path)
+    monkeypatch.setattr(sc.os, "replace", lambda *a: (_ for _ in ()).throw(OSError("boom")))
+    with pytest.raises(OSError):
+        sc.write_credentials({**CREDS, "jira_api_token": "new"}, path)
+    assert sc.read_credentials(path) == CREDS
+
+
+def test_write_credentials_leaves_no_temp_files_behind(tmp_path):
+    path = tmp_path / "credentials.json"
+    sc.write_credentials(CREDS, path)
+    assert [p.name for p in tmp_path.iterdir()] == ["credentials.json"]
+
+
 def test_browse_command_hint_includes_resolved_path():
     hint = sc.browse_command_hint("/plugin/root")
     assert "/plugin/root/scripts/browse_tree.py" in hint
-    assert "uv run --with textual,requests" in hint
+    # --no-project so running the browser from inside the user's own Python
+    # project doesn't make uv resolve and build that project first.
+    assert "uv run --no-project --with textual,requests" in hint
 
 
 def test_main_writes_file_and_prints_hint(monkeypatch, tmp_path, capsys):
@@ -61,6 +122,7 @@ def test_main_skips_write_when_incomplete(monkeypatch, tmp_path, capsys):
     exit_code = sc.main()
     assert exit_code == 0
     assert not (tmp_path / "credentials.json").exists()
+    assert "설정이 아직 없습니다" in capsys.readouterr().out
 
 
 def test_load_credentials_reads_file_when_present(tmp_path):
@@ -104,3 +166,51 @@ def test_load_credentials_falls_back_to_env_when_file_incomplete(monkeypatch, tm
         "jira_email": "a@b.com",
         "jira_api_token": "t",
     }
+
+
+def test_load_credentials_falls_back_to_env_when_file_is_mid_write(monkeypatch, tmp_path):
+    # A torn read must fall through to the environment, not raise.
+    path = tmp_path / "credentials.json"
+    path.write_text("", encoding="utf-8")
+    monkeypatch.setenv("JIRA_URL", "https://x.atlassian.net")
+    monkeypatch.setenv("JIRA_USERNAME", "a@b.com")
+    monkeypatch.setenv("JIRA_API_TOKEN", "t")
+    assert sc.load_credentials(path) == CREDS
+
+
+def test_creds_from_env_vars_ignores_unexpanded_references():
+    env = dict.fromkeys(sc.DIRECT_ENV_KEYS.values(), "${JIRA_URL}")
+    assert sc.creds_from_env_vars(env, sc.DIRECT_ENV_KEYS) is None
+
+
+def test_main_does_not_nag_when_options_absent_but_creds_already_stored(
+    monkeypatch, tmp_path, capsys
+):
+    # Options only reach hooks after the plugin is configured; on a session
+    # where they are missing, already-stored credentials still work, so the
+    # hook must not tell the user to go re-enter them.
+    monkeypatch.delenv("CLAUDE_PLUGIN_OPTION_JIRA_URL", raising=False)
+    monkeypatch.delenv("CLAUDE_PLUGIN_OPTION_JIRA_EMAIL", raising=False)
+    monkeypatch.delenv("CLAUDE_PLUGIN_OPTION_JIRA_API_TOKEN", raising=False)
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", "/plugin/root")
+    path = tmp_path / "credentials.json"
+    path.write_text(json.dumps(CREDS), encoding="utf-8")
+    monkeypatch.setattr(sc, "credentials_path", lambda: path)
+    assert sc.main() == 0
+    out = capsys.readouterr().out
+    assert "설정이 아직 없습니다" not in out
+    assert "/plugin/root/scripts/browse_tree.py" in out
+
+
+def test_main_does_not_rewrite_an_identical_credentials_file(monkeypatch, tmp_path):
+    # Rewriting the same values every session is what opened the torn-read
+    # window the MCP server crashed on.
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_URL", CREDS["jira_url"])
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_EMAIL", CREDS["jira_email"])
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_API_TOKEN", CREDS["jira_api_token"])
+    path = tmp_path / "credentials.json"
+    path.write_text(json.dumps(CREDS), encoding="utf-8")
+    monkeypatch.setattr(sc, "credentials_path", lambda: path)
+    before = path.stat().st_mtime_ns
+    assert sc.main() == 0
+    assert path.stat().st_mtime_ns == before

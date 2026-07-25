@@ -11,15 +11,25 @@ transitions, or creates issues, even if the connected MCP server offers one.
 
 Confirm Jira MCP tools are available (tools exposed by the `atlassian` MCP
 server this plugin bundles, typically named like `jira_search` /
-`jira_get_issue`). If none are visible:
+`jira_get_issue`). If none are visible, saved credentials are rarely the
+cause — do **not** open by asking the user to type them in again. Work
+through this in order instead:
 
-- Tell the user Jira isn't reachable yet.
-- Ask them to (re-)configure this plugin's Jira access for whichever tool
-  they're running it from — see this plugin's README for the exact steps
-  (Claude Code: `/plugin` and its `jira_url` / `jira_email` /
-  `jira_api_token` fields; other tools: the `JIRA_URL` / `JIRA_USERNAME` /
-  `JIRA_API_TOKEN` environment variables) — and confirm `uv`/`uvx` is
-  installed on their machine (`uvx --version`).
+- Tell the user Jira isn't reachable yet, and ask them to reconnect the
+  `atlassian` server (Claude Code: `/mcp`) or start a new session. A server
+  that failed to start once stays down for the rest of the session. Claude
+  Code may even list it as needing authentication — this plugin uses no
+  OAuth, so that label just means "failed to start", and reconnecting is the
+  fix.
+- If it still doesn't come up, check `uv`/`uvx` is installed and on PATH
+  (`uvx --version`). A freshly installed `uv` is invisible to terminals that
+  were already open before installing it.
+- Only once those are ruled out, have them check that this plugin's Jira
+  access is actually configured for whichever tool they're running it from —
+  see this plugin's README for the exact steps (Claude Code: `/plugin` and
+  its `jira_url` / `jira_email` / `jira_api_token` fields; other tools: the
+  `JIRA_URL` / `JIRA_USERNAME` / `JIRA_API_TOKEN` environment variables).
+  Re-entering values that are already set has never been the fix.
 - Stop here until it's fixed.
 
 ## 1. Resolve the board or issue

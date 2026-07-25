@@ -19,6 +19,16 @@ def test_load_credentials_reads_json(tmp_path):
     assert bt.load_credentials(path) == CREDS
 
 
+def test_load_credentials_returns_none_for_truncated_file(monkeypatch, tmp_path):
+    # Show the "credentials not found" message instead of a raw traceback.
+    monkeypatch.delenv("JIRA_URL", raising=False)
+    monkeypatch.delenv("JIRA_USERNAME", raising=False)
+    monkeypatch.delenv("JIRA_API_TOKEN", raising=False)
+    path = tmp_path / "credentials.json"
+    path.write_text("", encoding="utf-8")
+    assert bt.load_credentials(path) is None
+
+
 def test_list_boards_returns_key_and_name(requests_mock):
     requests_mock.get(
         "https://x.atlassian.net/rest/agile/1.0/board",

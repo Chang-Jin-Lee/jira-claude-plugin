@@ -26,7 +26,8 @@ don't hesitate to open an issue or PR even for something small.
 - `scripts/sync_credentials.py` — the `SessionStart` hook that syncs Jira
   credentials to `~/.jira-claude-plugin/credentials.json`
 - `scripts/run_mcp.py` — wrapper that launches the bundled Jira MCP server
-  with credentials injected (works around a Claude Code env-interpolation bug)
+  with credentials injected (from its own environment, or from the synced
+  file as a fallback)
 - `scripts/tests/` — the test suite (pytest + pytest-asyncio)
 - `hooks/hooks.json`, `.mcp.json`, `.claude-plugin/plugin.json` — Claude Code plugin wiring
 - `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json` — Codex CLI plugin wiring (no hook; the `atlassian` MCP server reads `JIRA_URL`/`JIRA_USERNAME`/`JIRA_API_TOKEN` from the environment directly)
@@ -40,7 +41,7 @@ You only need [uv](https://docs.astral.sh/uv/) — nothing is installed
 permanently. Run tests with:
 
 ```
-uv run --with pytest,pytest-asyncio,textual,requests,requests-mock pytest scripts/tests/ -v
+uv run --no-project --with pytest,pytest-asyncio,textual,requests,requests-mock pytest scripts/tests/ -v
 ```
 
 There's no enforced linter yet, so tests are the real quality gate. New
@@ -59,10 +60,13 @@ diving in:
   transcript.** Don't print it, log it, put it in a commit, or pass it as
   a bare CLI argument that could get echoed back.
 - **Bump the version on every hook-affecting change.** If a PR touches
-  `hooks/hooks.json`, `.claude-plugin/plugin.json`, `.mcp.json`, or any
-  file a hook depends on, bump `"version"` in both `.claude-plugin/plugin.json`
-  and `.claude-plugin/marketplace.json` (they must match). Otherwise
-  `/plugin update` silently no-ops — installed users never see the fix.
+  `hooks/hooks.json`, `.claude-plugin/plugin.json`, `.mcp.json`,
+  `.codex-plugin/plugin.json`, or any file a hook depends on, bump
+  `"version"` in all three manifests — `.claude-plugin/plugin.json`,
+  `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json` — plus the
+  version assertion in `scripts/tests/test_codex_plugin_manifest.py`. They
+  must match. Otherwise `/plugin update` silently no-ops — installed users
+  never see the fix.
   Keep `.codex-plugin/plugin.json`'s `"version"` in lockstep with those
   two as well, even though Codex has no equivalent update-skip failure
   mode — it's simpler to keep one version number across every manifest.
@@ -73,8 +77,24 @@ diving in:
   `~/.jira-claude-plugin/credentials.json`, deliberately outside the
   plugin's own versioned install directory, so it survives plugin updates.
   Don't move it under the plugin folder.
+- **That file is read by processes that start concurrently with the hook
+  that writes it.** Write it only through `sync_credentials.write_credentials`
+  (temp file + `os.replace`, skipped when unchanged) and read it only through
+  `read_credentials` (returns `None` for absent, partial, or mid-write
+  content). A plain `write_text`/`json.loads` pair on this path is a torn-read
+  bug: the Jira MCP server crashes, Claude Code marks it as needing
+  authentication, and the user gets asked to re-enter credentials that were
+  never wrong.
+- **Credentials should reach the MCP server through its `env` block**
+  (`${user_config.*}` in `.mcp.json`), not through the file. The file is a
+  fallback for older Claude Code builds and the standalone browser.
 - **No permanent installs.** Both scripts run via `uv run --with <deps>`,
   never `pip install`. Keep new scripts in that style.
+- **Always pass `--no-project` to `uv run`.** These scripts run with the
+  user's own project as the working directory; without it, `uv` tries to
+  resolve and build *their* project first — creating a stray `.venv/` in
+  their repo, or failing outright and taking the hook or MCP server down
+  with it.
 - **Korean (and other non-ASCII) stdout on Windows needs**
   `sys.stdout.reconfigure(encoding="utf-8")` as the first statement of
   `main()` — otherwise it mangles into mojibake under the default system

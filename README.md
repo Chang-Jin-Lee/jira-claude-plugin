@@ -79,6 +79,11 @@ The first time you use it, Claude Code will ask for your Jira site URL,
 your account email, and the API token you created above. These are stored
 securely on your machine — never in this repo, never in plain text.
 
+You only ever enter them once. Start a new session after filling them in
+(the plugin's Jira connection picks them up when the session starts), and
+from then on every session is ready to go. If you're ever asked for them
+again, that's a bug — see [Troubleshooting](#troubleshooting).
+
 ### Codex CLI
 
 ```
@@ -182,6 +187,16 @@ windows) and open a brand new one — or just restart your computer once —
 then launch Claude Code again. This is only needed the one time right after
 installing `uv`; every launch after that picks up the right PATH
 automatically.
+
+**The `atlassian` server shows up as needing authentication, or asks you to
+re-enter Jira settings you already entered.** This plugin uses no OAuth —
+there is nothing to authenticate. That label means the server failed to
+start. Run `/mcp`, reconnect `atlassian`, and check `uvx --version` works;
+your saved settings are almost certainly fine. Re-entering them won't help.
+Versions before 0.1.9 could hit this on any session, because the Jira
+connection and the credential-sync hook started at the same time and the
+connection could read the credentials file mid-write — `/plugin update` if
+you're on an older version.
 
 **Tree browser prints "자격증명을 찾을 수 없습니다".** In Claude Code, its
 credentials file is synced by a hook that runs once per session start —

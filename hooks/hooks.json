@@ -6,7 +6,11 @@
           {
             "type": "command",
             "command": "uv",
-            "args": ["run", "${CLAUDE_PLUGIN_ROOT}/scripts/sync_credentials.py"]
+            "args": [
+              "run",
+              "--no-project",
+              "${CLAUDE_PLUGIN_ROOT}/scripts/sync_credentials.py"
+            ]
           }
         ]
       }
