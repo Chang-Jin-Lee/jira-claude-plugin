@@ -5,6 +5,19 @@ import pytest
 import sync_credentials as sc
 
 CREDS = {"jira_url": "https://x.atlassian.net", "jira_email": "a@b.com", "jira_api_token": "t"}
+ENV_VARS = (
+    "CLAUDE_PLUGIN_OPTION_JIRA_URL",
+    "CLAUDE_PLUGIN_OPTION_JIRA_EMAIL",
+    "CLAUDE_PLUGIN_OPTION_JIRA_API_TOKEN",
+)
+
+
+@pytest.fixture(autouse=True)
+def offline_server_package(monkeypatch):
+    """main() asks server_package to keep the MCP server's package downloaded.
+    Keep that off the network unless a test opts in; server_package's own
+    behaviour is covered in test_server_package.py."""
+    monkeypatch.setattr(sc.server_package, "prepare", lambda state_dir, now: None)
 
 
 def test_build_credentials_returns_dict_when_all_present():
@@ -200,6 +213,52 @@ def test_main_does_not_nag_when_options_absent_but_creds_already_stored(
     out = capsys.readouterr().out
     assert "설정이 아직 없습니다" not in out
     assert "/plugin/root/scripts/browse_tree.py" in out
+
+
+def test_main_downloads_the_server_package_before_jira_is_configured(monkeypatch, tmp_path):
+    # The freshly-installed, not-yet-configured session is the best moment to
+    # start the ~150 MB download — the user is busy pasting in a token.
+    for var in ENV_VARS:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setattr(sc, "credentials_path", lambda: tmp_path / "credentials.json")
+    prepared = []
+    monkeypatch.setattr(
+        sc.server_package, "prepare", lambda state_dir, now: prepared.append(state_dir)
+    )
+    assert sc.main() == 0
+    assert prepared == [tmp_path]
+
+
+def test_main_passes_on_the_server_package_notice(monkeypatch, tmp_path, capsys):
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_URL", CREDS["jira_url"])
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_EMAIL", CREDS["jira_email"])
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_API_TOKEN", CREDS["jira_api_token"])
+    monkeypatch.setattr(sc, "credentials_path", lambda: tmp_path / "credentials.json")
+    monkeypatch.setattr(sc.server_package, "prepare", lambda state_dir, now: "다운로드 중입니다")
+    assert sc.main() == 0
+    assert "다운로드 중입니다" in capsys.readouterr().out
+
+
+def test_main_says_nothing_extra_when_the_server_package_is_ready(monkeypatch, tmp_path, capsys):
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_URL", CREDS["jira_url"])
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_EMAIL", CREDS["jira_email"])
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_API_TOKEN", CREDS["jira_api_token"])
+    monkeypatch.setattr(sc, "credentials_path", lambda: tmp_path / "credentials.json")
+    out = (sc.main(), capsys.readouterr().out)[1]
+    assert out.strip().count("\n") == 0  # just the tree-browser hint
+
+
+def test_main_keeps_the_refresh_marker_beside_the_credentials_file(monkeypatch, tmp_path):
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_URL", CREDS["jira_url"])
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_EMAIL", CREDS["jira_email"])
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_JIRA_API_TOKEN", CREDS["jira_api_token"])
+    seen = {}
+    monkeypatch.setattr(sc, "credentials_path", lambda: tmp_path / "sub" / "credentials.json")
+    monkeypatch.setattr(
+        sc.server_package, "prepare", lambda state_dir, now: seen.setdefault("dir", state_dir)
+    )
+    assert sc.main() == 0
+    assert seen["dir"] == tmp_path / "sub"
 
 
 def test_main_does_not_rewrite_an_identical_credentials_file(monkeypatch, tmp_path):

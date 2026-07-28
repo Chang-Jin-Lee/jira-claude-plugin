@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Sync Jira credentials from this hook process's environment to a fixed
-local file, and announce the standalone tree-browser command. Run once per
-session by a SessionStart hook.
+"""The plugin's SessionStart hook. Syncs Jira credentials from this hook
+process's environment to a fixed local file, keeps the Jira MCP server's
+package downloaded, and announces the standalone tree-browser command.
 
 The file is the standalone tree browser's only source of credentials, and a
 fallback for the MCP wrapper, which starts concurrently with this hook. So
@@ -12,7 +12,11 @@ file.
 import json
 import os
 import sys
+import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import server_package  # noqa: E402
 
 ENV_KEYS = {
     "jira_url": "CLAUDE_PLUGIN_OPTION_JIRA_URL",
@@ -96,17 +100,29 @@ def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     path = credentials_path()
     creds = build_credentials(dict(os.environ))
-    if creds is None:
+    if creds is not None:
+        write_credentials(creds, path)
+        configured = True
+    else:
         # No options in this hook's environment. Already-stored credentials
         # stay valid, so only ask the user to configure when there are none.
-        if read_credentials(path) is None:
-            print(
-                "Jira 설정이 아직 없습니다 - /plugin 에서 jira_url/jira_email/"
-                "jira_api_token을 채운 뒤 새 세션을 시작하세요."
-            )
-            return 0
-    else:
-        write_credentials(creds, path)
+        configured = read_credentials(path) is not None
+
+    # The MCP server starts before this hook and only ever launches from the
+    # cache, so downloading the server package is this hook's job. Do it even
+    # before Jira is configured: on a new machine that download is the long
+    # pole, and the minutes the user spends pasting in their API token are
+    # exactly when it is free.
+    notice = server_package.prepare(path.parent, time.time())
+    if notice:
+        print(notice)
+
+    if not configured:
+        print(
+            "Jira 설정이 아직 없습니다 - /plugin 에서 jira_url/jira_email/"
+            "jira_api_token을 채운 뒤 새 세션을 시작하세요."
+        )
+        return 0
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", ".")
     print(browse_command_hint(plugin_root))
     return 0

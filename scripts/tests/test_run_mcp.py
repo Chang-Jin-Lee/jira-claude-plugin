@@ -1,9 +1,18 @@
 import json
 from types import SimpleNamespace
 
+import pytest
+
 import run_mcp as rm
 
 CREDS = {"jira_url": "https://x.atlassian.net", "jira_email": "a@b.com", "jira_api_token": "t"}
+
+
+@pytest.fixture(autouse=True)
+def cached_server_package(monkeypatch):
+    """main() probes the uv cache before launching. Answer from memory so the
+    suite never shells out to uvx; test_server_package.py covers the probe."""
+    monkeypatch.setattr(rm.server_package, "is_cached", lambda: True)
 
 
 def test_build_env_injects_credentials_and_read_only():
@@ -178,12 +187,46 @@ def test_main_runs_server_with_injected_env(monkeypatch, tmp_path):
         calls.append((cmd, env))
         return SimpleNamespace(returncode=7)
 
+    monkeypatch.setattr(rm.server_package, "is_cached", lambda: True)
     monkeypatch.setattr(rm.subprocess, "run", fake_run)
     assert rm.main() == 7
     cmd, env = calls[0]
-    assert cmd == ["uvx", "mcp-atlassian"]
+    assert cmd == ["uvx", "--offline", "mcp-atlassian"]
     assert env["JIRA_URL"] == "https://x.atlassian.net"
     assert env["JIRA_API_TOKEN"] == "t"
+
+
+def test_main_starts_offline_when_the_package_is_cached(monkeypatch, tmp_path):
+    monkeypatch.setenv("JIRA_URL", CREDS["jira_url"])
+    monkeypatch.setenv("JIRA_USERNAME", CREDS["jira_email"])
+    monkeypatch.setenv("JIRA_API_TOKEN", CREDS["jira_api_token"])
+    monkeypatch.setattr(rm, "credentials_path", lambda: tmp_path / "credentials.json")
+    monkeypatch.setattr(rm.server_package, "is_cached", lambda: True)
+    calls = []
+    monkeypatch.setattr(
+        rm.subprocess, "run", lambda cmd, env: calls.append(cmd) or SimpleNamespace(returncode=0)
+    )
+    assert rm.main() == 0
+    assert calls == [["uvx", "--offline", "mcp-atlassian"]]
+
+
+def test_main_falls_back_to_an_online_start_and_explains_the_wait(monkeypatch, tmp_path, capsys):
+    # Nothing cached: the download will almost certainly outrun Claude Code's
+    # 30s connect timeout, so the log must say why rather than just dying.
+    monkeypatch.setenv("JIRA_URL", CREDS["jira_url"])
+    monkeypatch.setenv("JIRA_USERNAME", CREDS["jira_email"])
+    monkeypatch.setenv("JIRA_API_TOKEN", CREDS["jira_api_token"])
+    monkeypatch.setattr(rm, "credentials_path", lambda: tmp_path / "credentials.json")
+    monkeypatch.setattr(rm.server_package, "is_cached", lambda: False)
+    calls = []
+    monkeypatch.setattr(
+        rm.subprocess, "run", lambda cmd, env: calls.append(cmd) or SimpleNamespace(returncode=0)
+    )
+    assert rm.main() == 0
+    assert calls == [["uvx", "mcp-atlassian"]]
+    err = capsys.readouterr().err
+    assert "not in the uv cache" in err
+    assert "/mcp" in err
 
 
 def test_main_returns_1_when_credentials_never_appear(monkeypatch, tmp_path, capsys):

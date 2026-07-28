@@ -25,6 +25,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import server_package  # noqa: E402
 from sync_credentials import (  # noqa: E402
     DIRECT_ENV_KEYS,
     ENV_KEYS as PLUGIN_OPTION_KEYS,
@@ -102,7 +103,18 @@ def main() -> int:
         # The tree browser loses its credentials file, but the MCP server this
         # process exists to run does not depend on it.
         print(f"jira-claude-plugin: could not refresh credentials file: {exc}", file=sys.stderr)
-    proc = subprocess.run(["uvx", "mcp-atlassian"], env=build_env(creds, env))
+    cached = server_package.is_cached()
+    if not cached:
+        # Claude Code kills us at 30s. Fetching ~150 MB rarely fits, so say so
+        # in the log rather than leaving behind a bare "Connection closed".
+        print(
+            f"jira-claude-plugin: {server_package.PACKAGE} is not in the uv cache yet - "
+            "downloading it now, which usually takes longer than the 30s Claude Code "
+            "allows for a server to connect. The SessionStart hook is fetching it in "
+            "the background too; reconnect atlassian from /mcp once that finishes.",
+            file=sys.stderr,
+        )
+    proc = subprocess.run(server_package.start_command(cached), env=build_env(creds, env))
     return proc.returncode
 
 

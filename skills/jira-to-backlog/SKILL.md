@@ -24,6 +24,12 @@ through this in order instead:
 - If it still doesn't come up, check `uv`/`uvx` is installed and on PATH
   (`uvx --version`). A freshly installed `uv` is invisible to terminals that
   were already open before installing it.
+- On a machine that has never run this plugin before, the most likely cause
+  is that the Jira server package hasn't finished downloading — Claude Code
+  gives a server 30 seconds to start, and the first-time download is ~150 MB.
+  Check with `uvx --offline mcp-atlassian --version`: if that fails, it is
+  still downloading (the plugin fetches it in the background at session
+  start). Wait for `uvx mcp-atlassian --version` to succeed, then reconnect.
 - Only once those are ruled out, have them check that this plugin's Jira
   access is actually configured for whichever tool they're running it from —
   see this plugin's README for the exact steps (Claude Code: `/plugin` and

@@ -28,6 +28,8 @@ don't hesitate to open an issue or PR even for something small.
 - `scripts/run_mcp.py` — wrapper that launches the bundled Jira MCP server
   with credentials injected (from its own environment, or from the synced
   file as a fallback)
+- `scripts/server_package.py` — keeps `mcp-atlassian` downloaded so the
+  server can start from cache inside Claude Code's 30-second connect budget
 - `scripts/tests/` — the test suite (pytest + pytest-asyncio)
 - `hooks/hooks.json`, `.mcp.json`, `.claude-plugin/plugin.json` — Claude Code plugin wiring
 - `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json` — Codex CLI plugin wiring (no hook; the `atlassian` MCP server reads `JIRA_URL`/`JIRA_USERNAME`/`JIRA_API_TOKEN` from the environment directly)
@@ -88,6 +90,13 @@ diving in:
 - **Credentials should reach the MCP server through its `env` block**
   (`${user_config.*}` in `.mcp.json`), not through the file. The file is a
   fallback for older Claude Code builds and the standalone browser.
+- **Nothing on the MCP server's startup path may touch the network.** Claude
+  Code kills a server that hasn't connected in 30 seconds, and a `uvx`
+  index resolve can turn into a ~150 MB download — which is why the server
+  launches with `uvx --offline` and downloading belongs to the SessionStart
+  hook. A SessionStart hook can't cover for it either: hooks start about
+  150ms *after* the MCP server and run concurrently with it, so they cannot
+  warm anything up in time for their own session.
 - **No permanent installs.** Both scripts run via `uv run --with <deps>`,
   never `pip install`. Keep new scripts in that style.
 - **Always pass `--no-project` to `uv run`.** These scripts run with the
