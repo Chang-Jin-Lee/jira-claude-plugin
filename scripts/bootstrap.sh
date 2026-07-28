@@ -92,5 +92,9 @@ fi
 
 prefetch_server_package "$installed_dir"
 echo "uv 설치 완료. 이어서 Jira 서버 패키지($SERVER_PACKAGE, 약 150MB)를 백그라운드로 받는 중입니다."
-echo "다운로드가 끝나면 Claude Code를 완전히 종료했다가 다시 실행하세요. 그 다음부터는 바로 사용할 수 있습니다."
+# Not just "restart Claude Code": uv's installer edits the *user* PATH, and a
+# Claude Code relaunched from this same terminal inherits its stale
+# environment and still won't find uv.
+echo "다운로드가 끝나면 터미널 앱을 완전히 종료했다가(창 하나만 닫는 게 아니라 앱 전체) 새 터미널에서 Claude Code를 다시 실행하세요."
+echo "그 다음부터는 바로 사용할 수 있습니다."
 exit 0

@@ -147,6 +147,10 @@ def test_installs_and_prefetches_then_asks_for_a_restart(tmp_path):
     assert result.returncode == 0, result.stderr
     assert (target / "uv").exists(), f"installer never ran: {result.stdout}"
     assert "설치 완료" in result.stdout
+    # Must ask for a terminal restart, not just a Claude Code restart: uv's
+    # installer edits the user PATH, which an already-open terminal never sees,
+    # so relaunching from it would loop straight back to the off-PATH branch.
+    assert "터미널" in result.stdout
     assert "다시 실행" in result.stdout
 
 
