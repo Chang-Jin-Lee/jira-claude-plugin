@@ -27,10 +27,14 @@ REFRESH_INTERVAL_SECONDS = 7 * 24 * 60 * 60
 REFRESH_MARKER = "server-refreshed"
 PROBE_TIMEOUT_SECONDS = 60
 
+# Points at /mcp rather than "start a new session" on purpose. A server that
+# failed to start is flagged by Claude Code and skipped in later sessions, so
+# restarting alone can take two rounds to recover; reconnecting works at once.
 COLD_CACHE_NOTICE = (
-    f"Jira 서버 패키지({PACKAGE})를 처음 내려받는 중입니다 - 이번 세션에서는 "
-    "Jira 도구가 안 보일 수 있습니다. 다운로드가 끝나면 /mcp 에서 atlassian 을 "
-    "재연결하거나 새 세션을 시작하세요. 다음 세션부터는 바로 연결됩니다."
+    f"[jira-claude-plugin] Jira 서버 패키지({PACKAGE}, 약 150MB)를 처음 "
+    "내려받는 중입니다. 이번 세션에서는 Jira 도구가 보이지 않습니다.\n"
+    "  → 다운로드가 끝나면 /mcp 에서 atlassian 을 재연결하세요. "
+    "그 다음부터는 매 세션 자동으로 연결됩니다."
 )
 
 

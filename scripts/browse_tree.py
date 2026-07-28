@@ -170,10 +170,12 @@ def main() -> int:
     creds = load_credentials(credentials_path())
     if creds is None:
         print(
-            "자격증명을 찾을 수 없습니다 - Claude Code에서는 이 플러그인이 "
-            "활성화된 세션을 한 번 시작하고, 다른 도구에서는 JIRA_URL / "
-            "JIRA_USERNAME / JIRA_API_TOKEN 환경변수를 설정한 뒤 다시 "
-            "실행하세요."
+            "[jira-claude-plugin] Jira 자격증명을 찾을 수 없습니다.\n"
+            "  → Claude Code를 쓰신다면: /plugin 에서 jira_url / jira_email / "
+            "jira_api_token 을 채우고 세션을 한 번 시작한 뒤 다시 실행하세요.\n"
+            "     (세션이 시작될 때 이 브라우저가 읽는 자격증명 파일이 만들어집니다.)\n"
+            "  → Codex CLI나 일반 셸에서 쓰신다면: 이 터미널에 JIRA_URL / "
+            "JIRA_USERNAME / JIRA_API_TOKEN 을 export 한 뒤 다시 실행하세요."
         )
         return 1
     app = BrowseApp(creds)

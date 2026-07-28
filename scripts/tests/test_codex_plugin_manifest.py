@@ -12,7 +12,7 @@ def _load():
 def test_manifest_has_required_top_level_fields():
     manifest = _load()
     assert manifest["name"] == "jira-claude-plugin"
-    assert manifest["version"] == "0.1.13"
+    assert manifest["version"] == "0.1.14"
     assert manifest["description"]
     assert manifest["author"]["name"]
     assert manifest["skills"] == "./skills/"

@@ -208,6 +208,26 @@ through the backlog with [superpowers](https://github.com/obra/superpowers)
 
 ## Troubleshooting
 
+Start here — find the message you actually saw:
+
+| What you see | What it means | What to do |
+|---|---|---|
+| `hook error: Executable not found in $PATH: "uv"` | Expected on a machine that has never had `uv`. The plugin can't run anything yet. | Just ask for your board. The skill installs `uv`, starts the server download, and tells you when to restart. |
+| `hook error: Executable not found in $PATH: "sh"` | A bug in 0.1.11–0.1.12, which registered a hook that doesn't exist on Windows without Git Bash. | `/plugin update` (0.1.13 removed it). |
+| `uv는 이미 설치돼 있지만 …터미널이 그걸 못 보고 있습니다` | `uv` is installed but this terminal predates it, so it can't see the new PATH. | Fully quit the terminal **application**, not just the window, and start Claude Code from a new one. Don't reinstall. |
+| `Jira 서버 패키지…를 처음 내려받는 중입니다` | The ~150 MB server package is still downloading; Claude Code only waits 30 s for a server. | Let it finish, then `/mcp` → reconnect `atlassian`. Once only. |
+| `Jira 설정이 아직 없습니다` | No Jira URL / email / token stored yet. | `/plugin`, fill the three fields. Closing it reconnects the server for you. |
+| `이전에 실패로 표시돼…초기화했습니다` | The plugin just undid a stale failure flag (see below). | Nothing, or `/mcp` reconnect to use it immediately. |
+| `atlassian` listed as needing authentication | It never means authentication here — this plugin uses no OAuth. It means the server failed to start. | See the next section. |
+| Tree browser: `Jira 자격증명을 찾을 수 없습니다` | It reads a file written at Claude Code session start, or `JIRA_*` env vars. | Start one Claude Code session with Jira configured, then rerun it — or export `JIRA_URL` / `JIRA_USERNAME` / `JIRA_API_TOKEN`. |
+
+One thing worth knowing, because it surprises people: **when an MCP server
+fails to start, Claude Code remembers and stops starting it in later sessions
+too.** Restarting doesn't clear that — only reconnecting does. So a single
+early failure (no `uv` yet, package still downloading) can look like a
+permanent breakage. The plugin clears that flag for its own server as soon as
+the setup is healthy, so at worst you reconnect once.
+
 **"Failed to connect" on the atlassian MCP server right after installing `uv`.**
 `uv`'s installer updates your PATH, but any terminal window (or terminal app)
 that was already open won't see the change — including one where you just

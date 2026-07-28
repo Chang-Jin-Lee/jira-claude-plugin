@@ -124,14 +124,17 @@ def main() -> int:
         # only thing keeping the server down — and it survives restarts.
         if mcp_recovery.clear_needs_auth(mcp_recovery.needs_auth_cache_path()):
             print(
-                "이전에 실패로 표시됐던 Jira 서버 상태를 초기화했습니다 - "
-                "다음 세션부터 자동으로 연결됩니다."
+                "[jira-claude-plugin] 이전에 실패로 표시돼 계속 꺼져 있던 Jira "
+                "서버 상태를 초기화했습니다.\n"
+                "  → 지금 바로 쓰려면 /mcp 에서 atlassian 을 재연결하세요. "
+                "그냥 두면 다음 세션부터 자동으로 연결됩니다."
             )
 
     if not configured:
         print(
-            "Jira 설정이 아직 없습니다 - /plugin 에서 jira_url/jira_email/"
-            "jira_api_token을 채운 뒤 새 세션을 시작하세요."
+            "[jira-claude-plugin] Jira 설정이 아직 없습니다.\n"
+            "  → /plugin 에서 jira_url / jira_email / jira_api_token 을 "
+            "채우세요. 창을 닫으면 Jira 연결이 자동으로 다시 잡힙니다."
         )
         return 0
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", ".")

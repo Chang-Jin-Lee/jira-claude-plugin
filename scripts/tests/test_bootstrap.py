@@ -89,8 +89,11 @@ def test_points_at_a_terminal_restart_when_uv_is_installed_but_off_path(tmp_path
     empty.mkdir()
     result = run(tmp_path, [empty])
     assert result.returncode == 0
-    assert "PATH에 없습니다" in result.stdout
-    assert "완전히 종료" in result.stdout
+    assert "PATH" in result.stdout, "must explain that PATH is the problem"
+    assert "완전히 종료" in result.stdout, "must ask for a full terminal restart"
+    # Must name where uv already is. The shell may report it in its own path
+    # syntax (MSYS rewrites C:/…/Temp to /tmp/…), so match on the tail.
+    assert ".local/bin" in result.stdout, "must say where uv already is"
 
 
 def test_opt_out_explains_instead_of_installing(tmp_path):
@@ -151,7 +154,9 @@ def test_installs_and_prefetches_then_asks_for_a_restart(tmp_path):
     # installer edits the user PATH, which an already-open terminal never sees,
     # so relaunching from it would loop straight back to the off-PATH branch.
     assert "터미널" in result.stdout
-    assert "다시 실행" in result.stdout
+    assert "완전히 종료" in result.stdout
+    # And tell them what to do if the download is still running.
+    assert "/mcp" in result.stdout
 
 
 def test_prefetches_the_server_package_with_the_uv_it_just_installed(tmp_path):
