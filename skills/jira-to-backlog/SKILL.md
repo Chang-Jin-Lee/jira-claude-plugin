@@ -11,32 +11,65 @@ transitions, or creates issues, even if the connected MCP server offers one.
 
 Confirm Jira MCP tools are available (tools exposed by the `atlassian` MCP
 server this plugin bundles, typically named like `jira_search` /
-`jira_get_issue`). If none are visible, saved credentials are rarely the
-cause — do **not** open by asking the user to type them in again. Work
-through this in order instead:
+`jira_get_issue`).
 
-- Tell the user Jira isn't reachable yet, and ask them to reconnect the
-  `atlassian` server (Claude Code: `/mcp`) or start a new session. A server
-  that failed to start once stays down for the rest of the session. Claude
-  Code may even list it as needing authentication — this plugin uses no
-  OAuth, so that label just means "failed to start", and reconnecting is the
-  fix.
-- If it still doesn't come up, check `uv`/`uvx` is installed and on PATH
-  (`uvx --version`). A freshly installed `uv` is invisible to terminals that
-  were already open before installing it.
-- On a machine that has never run this plugin before, the most likely cause
-  is that the Jira server package hasn't finished downloading — Claude Code
-  gives a server 30 seconds to start, and the first-time download is ~150 MB.
-  Check with `uvx --offline mcp-atlassian --version`: if that fails, it is
-  still downloading (the plugin fetches it in the background at session
-  start). Wait for `uvx mcp-atlassian --version` to succeed, then reconnect.
-- Only once those are ruled out, have them check that this plugin's Jira
-  access is actually configured for whichever tool they're running it from —
-  see this plugin's README for the exact steps (Claude Code: `/plugin` and
-  its `jira_url` / `jira_email` / `jira_api_token` fields; other tools: the
-  `JIRA_URL` / `JIRA_USERNAME` / `JIRA_API_TOKEN` environment variables).
-  Re-entering values that are already set has never been the fix.
-- Stop here until it's fixed.
+If they are there, go straight to step 1. If none are visible, **fix the
+setup yourself rather than handing the user a checklist** — this is the one
+moment where the environment can actually be repaired, so do the work here.
+Saved credentials are almost never the cause, so do not open by asking the
+user to retype them.
+
+Diagnose in this order and act on the first thing that is wrong.
+
+**a. Is `uv` usable?** Run `uvx --version`.
+
+If that fails, the plugin cannot run anything at all, so set it up now.
+Tell the user what you are about to install, then run the bundled script for
+their platform from `${CLAUDE_PLUGIN_ROOT}/scripts/`:
+
+- Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File bootstrap.ps1`
+- macOS/Linux: `sh bootstrap.sh`
+
+It installs uv with the official per-user installer (no administrator
+rights), starts the ~150 MB Jira server package downloading in the
+background, and clears the failed-server flag Claude Code will have recorded
+when the server couldn't start earlier in this session. Relay what it prints.
+Then **stop and tell the user to fully quit their terminal application — the
+whole app, not just one window — and start Claude Code again from a new
+terminal.** uv's installer edits the user PATH, and neither this session nor
+a Claude Code relaunched from the same terminal can see that change, so there
+is nothing further to try here. That one restart is all they should need.
+
+**b. Is the server package downloaded?** Run
+`uvx --offline mcp-atlassian --version`.
+
+If that fails, it is still downloading, or was never fetched. Claude Code
+only waits 30 seconds for a server to start, which a first-time ~150 MB
+download does not fit inside. Run `uvx mcp-atlassian --version` and wait for
+it to finish, then ask the user to reconnect `atlassian` from `/mcp`, or
+start a new session.
+
+**c. Is Jira configured?** Only now is this worth checking. In Claude Code,
+`/plugin` shows whether `jira_url` / `jira_email` / `jira_api_token` are
+populated; other harnesses use the `JIRA_URL` / `JIRA_USERNAME` /
+`JIRA_API_TOKEN` environment variables. If they are genuinely empty, have
+the user fill them in. If they are already set, re-entering them has never
+been the fix.
+
+**d. Everything above checks out.** The server failed to start for some other
+reason, and a failed server stays down — not just for this session. Claude
+Code records it and skips starting it in later sessions too, so restarting
+alone will not bring it back. Ask the user to reconnect `atlassian` from
+`/mcp` (opening and closing `/plugin` also reconnects). Note that Claude Code
+may label it as needing authentication; this plugin uses no OAuth, so that
+label only ever means "failed to start". The plugin's own SessionStart hook
+clears that flag once the environment is healthy, so this should be a
+one-time step. If it still will not come up, the server's log says why; on
+Windows it is under
+`%LOCALAPPDATA%\claude-cli-nodejs\Cache\<project>\mcp-logs-plugin-jira-claude-plugin-atlassian\`.
+
+Stop after whichever step applies — do not continue into the crawl until
+Jira tools are actually available.
 
 ## 1. Resolve the board or issue
 

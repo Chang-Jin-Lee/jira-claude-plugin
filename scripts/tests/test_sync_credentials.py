@@ -18,6 +18,7 @@ def offline_server_package(monkeypatch):
     Keep that off the network unless a test opts in; server_package's own
     behaviour is covered in test_server_package.py."""
     monkeypatch.setattr(sc.server_package, "prepare", lambda state_dir, now: None)
+    monkeypatch.setattr(sc.mcp_recovery, "clear_needs_auth", lambda path, **k: False)
 
 
 def test_build_credentials_returns_dict_when_all_present():
@@ -227,6 +228,50 @@ def test_main_downloads_the_server_package_before_jira_is_configured(monkeypatch
     )
     assert sc.main() == 0
     assert prepared == [tmp_path]
+
+
+def test_main_clears_a_stale_needs_auth_flag_once_the_package_is_ready(
+    monkeypatch, tmp_path, capsys
+):
+    # Claude Code stops starting a flagged server entirely, across restarts,
+    # so leaving the flag set is what forces the manual /mcp reconnect.
+    for var, value in zip(ENV_VARS, CREDS.values()):
+        monkeypatch.setenv(var, value)
+    monkeypatch.setattr(sc, "credentials_path", lambda: tmp_path / "credentials.json")
+    monkeypatch.setattr(sc.server_package, "prepare", lambda state_dir, now: None)
+    cleared = []
+    monkeypatch.setattr(
+        sc.mcp_recovery, "clear_needs_auth", lambda path, **k: cleared.append(path) or True
+    )
+    assert sc.main() == 0
+    assert len(cleared) == 1
+    assert "초기화했습니다" in capsys.readouterr().out
+
+
+def test_main_leaves_the_flag_alone_while_the_package_is_still_downloading(
+    monkeypatch, tmp_path
+):
+    # Clearing it now would just let the next session fail and set it again.
+    for var, value in zip(ENV_VARS, CREDS.values()):
+        monkeypatch.setenv(var, value)
+    monkeypatch.setattr(sc, "credentials_path", lambda: tmp_path / "credentials.json")
+    monkeypatch.setattr(sc.server_package, "prepare", lambda state_dir, now: "받는 중")
+    monkeypatch.setattr(
+        sc.mcp_recovery,
+        "clear_needs_auth",
+        lambda path, **k: (_ for _ in ()).throw(AssertionError("must not clear")),
+    )
+    assert sc.main() == 0
+
+
+def test_main_says_nothing_when_there_was_no_stale_flag(monkeypatch, tmp_path, capsys):
+    for var, value in zip(ENV_VARS, CREDS.values()):
+        monkeypatch.setenv(var, value)
+    monkeypatch.setattr(sc, "credentials_path", lambda: tmp_path / "credentials.json")
+    monkeypatch.setattr(sc.server_package, "prepare", lambda state_dir, now: None)
+    monkeypatch.setattr(sc.mcp_recovery, "clear_needs_auth", lambda path, **k: False)
+    assert sc.main() == 0
+    assert "초기화했습니다" not in capsys.readouterr().out
 
 
 def test_main_passes_on_the_server_package_notice(monkeypatch, tmp_path, capsys):

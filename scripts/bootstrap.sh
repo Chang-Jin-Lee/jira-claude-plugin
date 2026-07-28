@@ -91,6 +91,11 @@ if ! installed_dir="$(uv_install_dir)"; then
 fi
 
 prefetch_server_package "$installed_dir"
+# An earlier session almost certainly failed to start the Jira server (uv was
+# missing), and Claude Code keeps such a server down across restarts until it
+# is reconnected by hand. Clear that now, with the uv we just installed, so
+# the restart below is the only thing the user has to do.
+"$installed_dir/uv" run --no-project "$(dirname "$0")/mcp_recovery.py" 2>/dev/null || true
 echo "uv 설치 완료. 이어서 Jira 서버 패키지($SERVER_PACKAGE, 약 150MB)를 백그라운드로 받는 중입니다."
 # Not just "restart Claude Code": uv's installer edits the *user* PATH, and a
 # Claude Code relaunched from this same terminal inherits its stale

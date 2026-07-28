@@ -5,11 +5,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.sh"]
-          },
-          {
-            "type": "command",
             "command": "uv",
             "args": [
               "run",

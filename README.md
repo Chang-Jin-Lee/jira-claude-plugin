@@ -86,13 +86,17 @@ Claude Code then asks for your Jira site URL, your account email, and the
 API token you created above. These are stored securely on your machine —
 never in this repo, never in plain text.
 
-Now start a new session. That's it — nothing else to install by hand.
+Now start a new session and just ask for your board — there is nothing else
+to install by hand.
 
 The plugin needs [uv](https://docs.astral.sh/uv/) and a ~150 MB Jira server
-package, and it takes care of both on that first session: if `uv` is missing
-it installs it for you (a per-user install, no administrator rights), then
-downloads the server package in the background and tells you when to restart
-Claude Code. After that restart, every session is ready the moment it opens.
+package. The first time you run it, if either is missing, it sets them up for
+you: uv goes in with the official per-user installer (no administrator
+rights), the server package downloads in the background, and you'll be told
+to fully quit your terminal application and start Claude Code again from a
+new one. That restart is unavoidable — uv's installer edits your PATH, and
+a program that is already running never sees that change. After it, every
+session is ready the moment it opens.
 
 You only ever enter your Jira settings once. If you're ever asked for them
 again, that's a bug — see [Troubleshooting](#troubleshooting).
@@ -221,15 +225,22 @@ there is nothing to authenticate. That label means the server failed to
 start. Your saved settings are almost certainly fine; re-entering them won't
 help. Two causes, in order of likelihood:
 
-1. *First run on a new machine.* The Jira server package hadn't finished
-   downloading, and Claude Code only waits 30 seconds for a server to start.
-   The session that hits this says so and keeps downloading in the
-   background — once it's done, restart Claude Code (or run `/mcp` and
-   reconnect `atlassian`) and you're set. Every later session connects
-   straight away.
-2. *Version 0.1.9 or older.* The Jira connection and the credential-sync hook
+1. *First run on a new machine.* `uv` or the ~150 MB server package wasn't
+   ready, and Claude Code only waits 30 seconds for a server to start. Worse,
+   it remembers the failure and stops starting that server in later sessions,
+   which is why restarting on its own doesn't help. Reconnect `atlassian` once
+   from `/mcp` and you're set — the plugin clears that flag itself as soon as
+   the setup is complete, so it shouldn't happen twice.
+2. *You just entered your Jira settings.* The server started before they
+   existed. Claude Code reconnects the plugin when you close `/plugin`; if it
+   doesn't, start a new session.
+3. *Version 0.1.9 or older.* The Jira connection and the credential-sync hook
    started at the same time and the connection could read the credentials file
    mid-write, which broke sessions at random. Run `/plugin update`.
+
+**Every session opens with `hook error: Executable not found in $PATH: "sh"`.**
+Versions 0.1.11 and 0.1.12 registered a `sh` hook, which doesn't exist on
+Windows machines without Git Bash. Run `/plugin update` — 0.1.13 removed it.
 
 **Tree browser prints "자격증명을 찾을 수 없습니다".** In Claude Code, its
 credentials file is synced by a hook that runs once per session start —

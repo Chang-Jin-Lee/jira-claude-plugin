@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import mcp_recovery  # noqa: E402
 import server_package  # noqa: E402
 
 ENV_KEYS = {
@@ -116,6 +117,16 @@ def main() -> int:
     notice = server_package.prepare(path.parent, time.time())
     if notice:
         print(notice)
+    else:
+        # Package is cached and uv obviously works (it is running this hook),
+        # so the server can start again. If an earlier failure left Claude Code
+        # holding a "needs authentication" flag for it, that flag is now the
+        # only thing keeping the server down — and it survives restarts.
+        if mcp_recovery.clear_needs_auth(mcp_recovery.needs_auth_cache_path()):
+            print(
+                "이전에 실패로 표시됐던 Jira 서버 상태를 초기화했습니다 - "
+                "다음 세션부터 자동으로 연결됩니다."
+            )
 
     if not configured:
         print(
