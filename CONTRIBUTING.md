@@ -30,6 +30,9 @@ don't hesitate to open an issue or PR even for something small.
   file as a fallback)
 - `scripts/server_package.py` — keeps `mcp-atlassian` downloaded so the
   server can start from cache inside Claude Code's 30-second connect budget
+- `scripts/bootstrap.sh` — the other `SessionStart` hook: installs `uv` if it
+  is missing. Written in `sh` precisely because everything else needs `uv`,
+  so a `uv run` hook would never execute on a machine that lacks it
 - `scripts/tests/` — the test suite (pytest + pytest-asyncio)
 - `hooks/hooks.json`, `.mcp.json`, `.claude-plugin/plugin.json` — Claude Code plugin wiring
 - `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json` — Codex CLI plugin wiring (no hook; the `atlassian` MCP server reads `JIRA_URL`/`JIRA_USERNAME`/`JIRA_API_TOKEN` from the environment directly)
@@ -104,6 +107,12 @@ diving in:
   resolve and build *their* project first — creating a stray `.venv/` in
   their repo, or failing outright and taking the hook or MCP server down
   with it.
+- **`bootstrap.sh` may not assume anything is on PATH** — not `uv`, not even
+  `uname`. It runs before the plugin's dependencies exist, so platform
+  detection goes through environment variables, and note that Windows
+  upper-cases env names (`SYSTEMROOT`, not `SystemRoot`) while a shell does
+  not. Keep it POSIX `sh`; it is the only file here that Git Bash runs
+  directly.
 - **Korean (and other non-ASCII) stdout on Windows needs**
   `sys.stdout.reconfigure(encoding="utf-8")` as the first statement of
   `main()` — otherwise it mangles into mojibake under the default system

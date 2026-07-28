@@ -1,0 +1,4 @@
+# bootstrap.sh is executed by sh on every platform. Checked out with CRLF it
+# dies with "bad interpreter" on macOS/Linux and "$'\r': command not found"
+# under Git Bash, which would take the plugin's uv setup down with it.
+*.sh text eol=lf

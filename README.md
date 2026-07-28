@@ -17,7 +17,6 @@ Turn a Jira Kanban board into a ready-to-work backlog, right from your terminal 
 - [Requirements](#requirements)
   - [Get a Jira API token](#get-a-jira-api-token)
 - [Install](#install)
-  - [Before you start: uv](#before-you-start-uv)
   - [Claude Code](#claude-code)
   - [Codex CLI](#codex-cli)
 - [Browse boards and issues in a real terminal tree](#browse-boards-and-issues-in-a-real-terminal-tree)
@@ -54,7 +53,7 @@ guessing.
 
 - [Claude Code](https://claude.com/claude-code) or [Codex CLI](https://developers.openai.com/codex)
 - A Jira Cloud site, with your account email and an API token
-- [uv](https://docs.astral.sh/uv/) installed on your machine (used to run the Jira connector and the tree browser) — see [Before you start: uv](#before-you-start-uv)
+- [uv](https://docs.astral.sh/uv/) — runs the Jira connector and the tree browser. In Claude Code the plugin installs it for you on first run if it's missing; see [Install](#install)
 
 ### Get a Jira API token
 
@@ -62,36 +61,6 @@ guessing.
 2. Create a token and copy it — it's only shown once
 
 ## Install
-
-### Before you start: uv
-
-Both the Jira connector and the tree browser run through
-[uv](https://docs.astral.sh/uv/), so install it **first**, in a normal
-terminal — not inside Claude Code:
-
-```
-winget install --id=astral-sh.uv -e
-```
-
-macOS/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-
-Then **fully quit your terminal application** (every window — many terminals
-keep one background process alive, so opening a new tab isn't enough) and
-open a fresh one. `uv`'s installer edits your PATH, and already-running
-programs never see that change.
-
-While you're there, pull down the Jira server package once:
-
-```
-uvx mcp-atlassian --version
-```
-
-That downloads ~150 MB. Doing it now, where it can take as long as it needs,
-is what keeps your first Claude Code session from failing: Claude Code gives
-the Jira server 30 seconds to start, and a first-time download rarely fits.
-The plugin also fetches this in the background if you skip it — you'd just
-have to reconnect once. Skip this step entirely if `uvx mcp-atlassian
---version` already prints a version.
 
 ### Claude Code
 
@@ -117,10 +86,30 @@ Claude Code then asks for your Jira site URL, your account email, and the
 API token you created above. These are stored securely on your machine —
 never in this repo, never in plain text.
 
-You only ever enter them once. Start a new session after filling them in
-(the plugin's Jira connection picks them up when the session starts), and
-from then on every session is ready to go. If you're ever asked for them
+Now start a new session. That's it — nothing else to install by hand.
+
+The plugin needs [uv](https://docs.astral.sh/uv/) and a ~150 MB Jira server
+package, and it takes care of both on that first session: if `uv` is missing
+it installs it for you (a per-user install, no administrator rights), then
+downloads the server package in the background and tells you when to restart
+Claude Code. After that restart, every session is ready the moment it opens.
+
+You only ever enter your Jira settings once. If you're ever asked for them
 again, that's a bug — see [Troubleshooting](#troubleshooting).
+
+Prefer to do it yourself, or on a machine that can't reach `astral.sh`? Run
+these in a normal terminal before installing the plugin, then fully quit and
+reopen the terminal:
+
+```
+winget install --id=astral-sh.uv -e
+uvx mcp-atlassian --version
+```
+
+macOS/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh` instead of the
+`winget` line. Setting `JIRA_PLUGIN_NO_BOOTSTRAP=1` stops the plugin from
+installing anything on its own; `JIRA_PLUGIN_UV_INSTALLER` replaces the
+install command outright, for an internal mirror.
 
 ### Codex CLI
 
@@ -232,13 +221,12 @@ there is nothing to authenticate. That label means the server failed to
 start. Your saved settings are almost certainly fine; re-entering them won't
 help. Two causes, in order of likelihood:
 
-1. *First run on a new machine.* The Jira server package hadn't been
-   downloaded yet, and Claude Code only waits 30 seconds for a server to
-   start. The session that hits this prints a note saying so, and downloads
-   the package in the background — once it finishes, run `/mcp`, reconnect
-   `atlassian`, and you're set. Every later session connects straight away.
-   Running `uvx mcp-atlassian --version` yourself before installing (see
-   [Before you start: uv](#before-you-start-uv)) avoids it entirely.
+1. *First run on a new machine.* The Jira server package hadn't finished
+   downloading, and Claude Code only waits 30 seconds for a server to start.
+   The session that hits this says so and keeps downloading in the
+   background — once it's done, restart Claude Code (or run `/mcp` and
+   reconnect `atlassian`) and you're set. Every later session connects
+   straight away.
 2. *Version 0.1.9 or older.* The Jira connection and the credential-sync hook
    started at the same time and the connection could read the credentials file
    mid-write, which broke sessions at random. Run `/plugin update`.
